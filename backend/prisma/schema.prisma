@@ -29,10 +29,20 @@ model User {
   // OAuth
   googleId            String?   @unique
   appleId             String?   @unique
+  oauthProvider       String?
+  oauthId             String?
 
   // Security
   twoFactorEnabled    Boolean   @default(false)
   twoFactorSecret     String?
+
+  // Password Reset
+  passwordResetToken  String?
+  passwordResetExpires DateTime?
+
+  // Email Verification
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
 
   // Metadata
   lastLoginAt         DateTime?
@@ -120,28 +130,29 @@ model Expense {
   description     String
   category        String
   notes           String?
+  receiptUrl      String?
 
   // Dates
   date            DateTime
 
+  // Payer
+  paidById        String
+
   // Metadata
-  createdBy       String
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
-  deletedBy       String?
 
   // Split details
   splitMethod     String    @default("equal")
-  splitData       Json?
 
   // Relations
   group           Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  creator         User                @relation("ExpenseCreator", fields: [createdBy], references: [id])
+  paidBy          User                @relation("ExpenseCreator", fields: [paidById], references: [id])
   participants    ExpenseParticipant[]
 
   @@index([groupId])
-  @@index([createdBy])
+  @@index([paidById])
   @@index([date(sort: Desc)])
   @@index([category])
   @@index([createdAt])
@@ -185,13 +196,11 @@ model Settlement {
   referenceNumber     String?
   notes               String?
 
-  // Confirmation
-  confirmed           Boolean   @default(false)
-  confirmedAt         DateTime?
-  confirmedBy         String?
+  // Status
+  status              String    @default("pending") // pending, confirmed, cancelled
 
   // Dates
-  date                DateTime
+  date                DateTime  @default(now())
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   deletedAt           DateTime?
@@ -211,7 +220,7 @@ model Settlement {
   @@index([groupId])
   @@index([date])
   @@index([createdAt])
-  @@index([confirmed])
+  @@index([status])
 }
 
 // Sessions table
@@ -220,7 +229,7 @@ model Session {
   userId        String
 
   // Token details
-  refreshToken  String    @unique
+  token         String    @unique
   deviceName    String?
   deviceType    String?
   userAgent     String?
@@ -236,7 +245,7 @@ model Session {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([refreshToken])
+  @@index([token])
   @@index([expiresAt])
   @@index([revoked])
 }

@@ -28,21 +28,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(requestLogger);
 
-// Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: config.nodeEnv,
-  });
-});
-
-// API routes (will be added in Week 3-4)
-// app.use(`/api/${config.apiVersion}/auth`, authRoutes);
-// app.use(`/api/${config.apiVersion}/users`, userRoutes);
-// app.use(`/api/${config.apiVersion}/groups`, groupRoutes);
-// app.use(`/api/${config.apiVersion}/expenses`, expenseRoutes);
+// API routes
+import apiRoutes from './routes';
+app.use('/api/v1', apiRoutes);
 
 // 404 handler
 app.use(notFound);

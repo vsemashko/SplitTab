@@ -36,6 +36,11 @@ export const loginSchema = z.object({
   password: z.string(),
 });
 
+export const updatePasswordSchema = z.object({
+  currentPassword: z.string(),
+  newPassword: passwordSchema,
+});
+
 // Group validation schemas
 export const groupTypeSchema = z.enum([
   'friends',
