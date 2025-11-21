@@ -330,6 +330,184 @@ export class ReceiptController {
       next(error);
     }
   }
+
+  /**
+   * Apply manual corrections to receipt
+   * PATCH /api/v1/receipts/:id/correct
+   */
+  async applyManualCorrection(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const { id } = req.params;
+      const corrections = req.body;
+
+      const receipt = await receiptService.applyManualCorrection(id, corrections, req.user.userId);
+
+      logger.info(`Manual corrections applied to receipt: ${id} by ${req.user.email}`);
+
+      res.json({
+        success: true,
+        data: { receipt },
+        message: 'Receipt corrected successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Advanced search receipts
+   * POST /api/v1/receipts/search
+   */
+  async advancedSearch(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const filters = req.body;
+
+      // Convert date strings to Date objects
+      if (filters.startDate) {
+        filters.startDate = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        filters.endDate = new Date(filters.endDate);
+      }
+
+      const result = await receiptService.advancedSearch(req.user.userId, filters);
+
+      res.json({
+        success: true,
+        data: {
+          receipts: result.receipts,
+          total: result.total,
+          limit: filters.limit || 50,
+          offset: filters.offset || 0,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Batch retry OCR
+   * POST /api/v1/receipts/batch/retry-ocr
+   */
+  async batchRetryOCR(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const { receiptIds } = req.body;
+
+      if (!receiptIds || !Array.isArray(receiptIds) || receiptIds.length === 0) {
+        throw new ApiError(400, 'Receipt IDs are required');
+      }
+
+      const result = await receiptService.batchRetryOCR(receiptIds, req.user.userId);
+
+      // Queue OCR jobs for successful retries
+      const { addOCRJob } = await import('../queues/ocr.queue');
+      for (const id of receiptIds) {
+        try {
+          const receipt = await receiptService.getReceiptById(id);
+          if (receipt.uploadedById === req.user.userId) {
+            await addOCRJob({
+              receiptId: id,
+              filePath: receipt.fileUrl,
+            });
+          }
+        } catch (error) {
+          logger.error(`Error queueing OCR for receipt ${id}:`, error);
+        }
+      }
+
+      logger.info(`Batch OCR retry: ${result.success} succeeded, ${result.failed} failed`);
+
+      res.json({
+        success: true,
+        data: result,
+        message: `OCR retry queued for ${result.success} receipts`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Batch delete receipts
+   * POST /api/v1/receipts/batch/delete
+   */
+  async batchDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const { receiptIds } = req.body;
+
+      if (!receiptIds || !Array.isArray(receiptIds) || receiptIds.length === 0) {
+        throw new ApiError(400, 'Receipt IDs are required');
+      }
+
+      const result = await receiptService.batchDelete(receiptIds, req.user.userId);
+
+      logger.info(`Batch delete: ${result.success} succeeded, ${result.failed} failed`);
+
+      res.json({
+        success: true,
+        data: result,
+        message: `${result.success} receipts deleted successfully`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Export receipts
+   * POST /api/v1/receipts/export
+   */
+  async exportReceipts(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const { format = 'csv', receiptIds, includeLineItems = false } = req.body;
+
+      if (format === 'json') {
+        const data = await receiptService.exportToJSON(
+          req.user.userId,
+          receiptIds,
+          includeLineItems
+        );
+
+        res.json({
+          success: true,
+          data: { receipts: data, count: data.length },
+        });
+      } else if (format === 'csv') {
+        const csv = await receiptService.exportToCSV(req.user.userId, receiptIds, includeLineItems);
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=receipts.csv');
+        res.send(csv);
+      } else {
+        throw new ApiError(400, 'Unsupported export format. Use "csv" or "json".');
+      }
+
+      logger.info(`Receipts exported to ${format} by ${req.user.email}`);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const receiptController = new ReceiptController();

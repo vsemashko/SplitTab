@@ -436,6 +436,318 @@ export class ReceiptService {
       averageConfidence: avgConfidence._avg.ocrConfidence || undefined,
     };
   }
+
+  /**
+   * Apply manual corrections to OCR results
+   */
+  async applyManualCorrection(
+    id: string,
+    corrections: Partial<OCRResult>,
+    userId: string
+  ): Promise<Receipt> {
+    const receipt = await prisma.receipt.findUnique({
+      where: { id, deletedAt: null },
+    });
+
+    if (!receipt) {
+      throw new NotFoundError('Receipt not found');
+    }
+
+    // Only uploader can correct receipt
+    if (receipt.uploadedById !== userId) {
+      throw new ApiError(403, 'You can only correct your own receipts');
+    }
+
+    const updated = await prisma.receipt.update({
+      where: { id },
+      data: {
+        merchantName: corrections.merchantName ?? receipt.merchantName,
+        totalAmount: corrections.totalAmount ?? receipt.totalAmount,
+        currency: corrections.currency ?? receipt.currency,
+        receiptDate: corrections.receiptDate ?? receipt.receiptDate,
+        tax: corrections.tax ?? receipt.tax,
+        tip: corrections.tip ?? receipt.tip,
+        subtotal: corrections.subtotal ?? receipt.subtotal,
+        lineItems: (corrections.lineItems ?? receipt.lineItems) as any,
+        updatedAt: new Date(),
+      },
+      include: {
+        uploadedBy: { select: { id: true, name: true, email: true } },
+        expense: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Advanced search/filter receipts
+   */
+  async advancedSearch(
+    userId: string,
+    filters: {
+      merchantName?: string;
+      minAmount?: number;
+      maxAmount?: number;
+      currency?: string;
+      startDate?: Date;
+      endDate?: Date;
+      ocrStatus?: string;
+      expenseId?: string;
+      hasExpense?: boolean;
+      minConfidence?: number;
+      maxConfidence?: number;
+      limit?: number;
+      offset?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    }
+  ): Promise<{ receipts: Receipt[]; total: number }> {
+    const where: any = {
+      uploadedById: userId,
+      deletedAt: null,
+    };
+
+    if (filters.merchantName) {
+      where.merchantName = {
+        contains: filters.merchantName,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
+      where.totalAmount = {};
+      if (filters.minAmount !== undefined) {
+        where.totalAmount.gte = filters.minAmount;
+      }
+      if (filters.maxAmount !== undefined) {
+        where.totalAmount.lte = filters.maxAmount;
+      }
+    }
+
+    if (filters.currency) {
+      where.currency = filters.currency;
+    }
+
+    if (filters.startDate !== undefined || filters.endDate !== undefined) {
+      where.receiptDate = {};
+      if (filters.startDate) {
+        where.receiptDate.gte = filters.startDate;
+      }
+      if (filters.endDate) {
+        where.receiptDate.lte = filters.endDate;
+      }
+    }
+
+    if (filters.ocrStatus) {
+      where.ocrStatus = filters.ocrStatus;
+    }
+
+    if (filters.expenseId) {
+      where.expenseId = filters.expenseId;
+    }
+
+    if (filters.hasExpense !== undefined) {
+      where.expenseId = filters.hasExpense ? { not: null } : null;
+    }
+
+    if (filters.minConfidence !== undefined || filters.maxConfidence !== undefined) {
+      where.ocrConfidence = {};
+      if (filters.minConfidence !== undefined) {
+        where.ocrConfidence.gte = filters.minConfidence;
+      }
+      if (filters.maxConfidence !== undefined) {
+        where.ocrConfidence.lte = filters.maxConfidence;
+      }
+    }
+
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder || 'desc';
+
+    const [receipts, total] = await Promise.all([
+      prisma.receipt.findMany({
+        where,
+        include: {
+          uploadedBy: { select: { id: true, name: true, email: true } },
+          expense: { select: { id: true, description: true, amount: true } },
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip: filters.offset || 0,
+        take: filters.limit || 50,
+      }),
+      prisma.receipt.count({ where }),
+    ]);
+
+    return { receipts, total };
+  }
+
+  /**
+   * Batch retry OCR for multiple receipts
+   */
+  async batchRetryOCR(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const id of receiptIds) {
+      try {
+        const receipt = await prisma.receipt.findUnique({
+          where: { id, deletedAt: null },
+        });
+
+        if (!receipt) {
+          failed++;
+          continue;
+        }
+
+        // Only uploader can retry OCR
+        if (receipt.uploadedById !== userId) {
+          failed++;
+          continue;
+        }
+
+        // Update status to pending for retry
+        await prisma.receipt.update({
+          where: { id },
+          data: {
+            ocrStatus: 'pending',
+            ocrError: null,
+            updatedAt: new Date(),
+          },
+        });
+
+        success++;
+      } catch (error) {
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
+
+  /**
+   * Batch delete receipts
+   */
+  async batchDelete(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const id of receiptIds) {
+      try {
+        await this.deleteReceipt(id, userId);
+        success++;
+      } catch (error) {
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
+
+  /**
+   * Export receipts to JSON
+   */
+  async exportToJSON(
+    userId: string,
+    receiptIds?: string[],
+    includeLineItems: boolean = false
+  ): Promise<any[]> {
+    const where: any = {
+      uploadedById: userId,
+      deletedAt: null,
+    };
+
+    if (receiptIds && receiptIds.length > 0) {
+      where.id = { in: receiptIds };
+    }
+
+    const receipts = await prisma.receipt.findMany({
+      where,
+      include: {
+        expense: { select: { id: true, description: true, amount: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return receipts.map((receipt) => ({
+      id: receipt.id,
+      merchantName: receipt.merchantName || '',
+      totalAmount: receipt.totalAmount?.toString() || '',
+      currency: receipt.currency || '',
+      receiptDate: receipt.receiptDate?.toISOString() || '',
+      tax: receipt.tax?.toString() || '',
+      tip: receipt.tip?.toString() || '',
+      subtotal: receipt.subtotal?.toString() || '',
+      ...(includeLineItems && { lineItems: receipt.lineItems }),
+      ocrStatus: receipt.ocrStatus,
+      ocrConfidence: receipt.ocrConfidence || 0,
+      expenseId: receipt.expenseId || '',
+      expenseDescription: receipt.expense?.description || '',
+      fileName: receipt.fileName,
+      fileUrl: receipt.fileUrl,
+      createdAt: receipt.createdAt.toISOString(),
+    }));
+  }
+
+  /**
+   * Export receipts to CSV format
+   */
+  async exportToCSV(
+    userId: string,
+    receiptIds?: string[],
+    _includeLineItems: boolean = false
+  ): Promise<string> {
+    const data = await this.exportToJSON(userId, receiptIds, false);
+
+    if (data.length === 0) {
+      return 'No receipts to export';
+    }
+
+    // CSV headers
+    const headers = [
+      'ID',
+      'Merchant Name',
+      'Total Amount',
+      'Currency',
+      'Receipt Date',
+      'Tax',
+      'Tip',
+      'Subtotal',
+      'OCR Status',
+      'OCR Confidence',
+      'Expense ID',
+      'Expense Description',
+      'File Name',
+      'Created At',
+    ];
+
+    // CSV rows
+    const rows = data.map((receipt) => [
+      receipt.id,
+      receipt.merchantName,
+      receipt.totalAmount,
+      receipt.currency,
+      receipt.receiptDate,
+      receipt.tax,
+      receipt.tip,
+      receipt.subtotal,
+      receipt.ocrStatus,
+      receipt.ocrConfidence,
+      receipt.expenseId,
+      receipt.expenseDescription,
+      receipt.fileName,
+      receipt.createdAt,
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ),
+    ].join('\n');
+
+    return csvContent;
+  }
 }
 
 export const receiptService = new ReceiptService();

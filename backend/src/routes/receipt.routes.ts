@@ -88,4 +88,39 @@ router.post('/:id/retry-ocr', authenticate, receiptController.retryOCR.bind(rece
  */
 router.delete('/:id', authenticate, receiptController.deleteReceipt.bind(receiptController));
 
+/**
+ * @route   PATCH /api/v1/receipts/:id/correct
+ * @desc    Apply manual corrections to receipt OCR results
+ * @access  Private
+ */
+router.patch('/:id/correct', authenticate, receiptController.applyManualCorrection.bind(receiptController));
+
+/**
+ * @route   POST /api/v1/receipts/search
+ * @desc    Advanced search/filter receipts
+ * @access  Private
+ */
+router.post('/search', authenticate, receiptController.advancedSearch.bind(receiptController));
+
+/**
+ * @route   POST /api/v1/receipts/batch/retry-ocr
+ * @desc    Batch retry OCR for multiple receipts
+ * @access  Private
+ */
+router.post('/batch/retry-ocr', authenticate, receiptController.batchRetryOCR.bind(receiptController));
+
+/**
+ * @route   POST /api/v1/receipts/batch/delete
+ * @desc    Batch delete receipts
+ * @access  Private
+ */
+router.post('/batch/delete', authenticate, receiptController.batchDelete.bind(receiptController));
+
+/**
+ * @route   POST /api/v1/receipts/export
+ * @desc    Export receipts to CSV or JSON
+ * @access  Private
+ */
+router.post('/export', authenticate, receiptController.exportReceipts.bind(receiptController));
+
 export default router;
