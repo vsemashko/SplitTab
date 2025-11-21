@@ -3,6 +3,7 @@ import { Job } from 'bull';
 import { ocrQueue, OCRJobData } from '../queues/ocr.queue';
 import { ocrService } from '../services/ocr.service';
 import { receiptService } from '../services/receipt.service';
+import { notificationService } from '../services/notification.service';
 import { logger } from '../utils/logger';
 
 const CONCURRENCY = parseInt(process.env.OCR_QUEUE_CONCURRENCY || '5', 10);
@@ -32,7 +33,7 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
     }
 
     // Update receipt with OCR results
-    await receiptService.updateOCRResults(receiptId, ocrResult, 'completed');
+    const receipt = await receiptService.updateOCRResults(receiptId, ocrResult, 'completed');
 
     logger.info(
       `OCR completed for receipt ${receiptId} with confidence ${ocrResult.confidence}`
@@ -45,18 +46,41 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
           `Total: ${ocrResult.totalAmount || 'N/A'} ${ocrResult.currency || ''}`
       );
     }
+
+    // Send success notification
+    try {
+      await notificationService.notifyReceiptProcessed(
+        receipt.uploadedById,
+        receiptId,
+        ocrResult.merchantName,
+        ocrResult.confidence
+      );
+    } catch (notifError) {
+      logger.error('Error sending OCR success notification:', notifError);
+    }
   } catch (error: any) {
     logger.error(`Error processing OCR for receipt ${receiptId}:`, error);
 
     // Update receipt with error status if this is the last attempt
     if (job.attemptsMade >= (job.opts.attempts || 3) - 1) {
-      await receiptService.updateOCRResults(
+      const receipt = await receiptService.updateOCRResults(
         receiptId,
         { confidence: 0, rawData: null },
         'failed',
         error.message || 'OCR processing failed'
       );
       logger.error(`OCR failed permanently for receipt ${receiptId} after all retries`);
+
+      // Send failure notification
+      try {
+        await notificationService.notifyReceiptOCRFailed(
+          receipt.uploadedById,
+          receiptId,
+          error.message
+        );
+      } catch (notifError) {
+        logger.error('Error sending OCR failure notification:', notifError);
+      }
     }
 
     throw error; // Re-throw to trigger Bull retry mechanism
@@ -80,15 +104,26 @@ async function startWorker() {
   ocrQueue.on('failed', async (job, error) => {
     logger.error(`Job ${job.id} failed:`, error);
 
-    // If all retries exhausted, update receipt status
+    // If all retries exhausted, update receipt status and send notification
     if (job.attemptsMade >= (job.opts.attempts || 3)) {
       try {
-        await receiptService.updateOCRResults(
+        const receipt = await receiptService.updateOCRResults(
           job.data.receiptId,
           { confidence: 0, rawData: null },
           'failed',
           error.message
         );
+
+        // Send failure notification
+        try {
+          await notificationService.notifyReceiptOCRFailed(
+            receipt.uploadedById,
+            job.data.receiptId,
+            error.message
+          );
+        } catch (notifError) {
+          logger.error('Error sending OCR failure notification:', notifError);
+        }
       } catch (updateError) {
         logger.error('Error updating receipt after job failure:', updateError);
       }

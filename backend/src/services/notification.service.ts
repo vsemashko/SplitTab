@@ -1,5 +1,6 @@
 import { PrismaClient, Notification } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
+import { socketService } from './socket.service';
 
 const prisma = new PrismaClient();
 
@@ -26,7 +27,7 @@ export class NotificationService {
         type: data.type,
         title: data.title,
         message: data.message,
-        data: data.data || null,
+        data: (data.data as any) || null,
         actionUrl: data.actionUrl,
         priority: data.priority || 'normal',
         category: data.category,
@@ -42,6 +43,9 @@ export class NotificationService {
         },
       },
     });
+
+    // Send real-time notification via Socket.IO
+    socketService.sendNotification(data.userId, notification);
 
     return notification;
   }
@@ -91,9 +95,7 @@ export class NotificationService {
   ): Promise<{ notifications: Notification[]; total: number; unreadCount: number }> {
     const where: any = {
       userId,
-      expiresAt: {
-        or: [{ equals: null }, { gte: new Date() }],
-      },
+      OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     };
 
     if (filters.read !== undefined) {
@@ -115,7 +117,7 @@ export class NotificationService {
     const [notifications, total, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where,
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+        orderBy: { createdAt: 'desc' },
         skip: filters.offset || 0,
         take: filters.limit || 50,
         include: {
@@ -133,9 +135,7 @@ export class NotificationService {
         where: {
           userId,
           read: false,
-          expiresAt: {
-            or: [{ equals: null }, { gte: new Date() }],
-          },
+          OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
         },
       }),
     ]);
@@ -271,8 +271,8 @@ export class NotificationService {
       type: 'receipt_ocr_failed',
       title: 'Receipt Processing Failed',
       message: error
-        ? `We couldn't process your receipt: ${error}. You can retry or enter the details manually.`
-        : 'We couldn't process your receipt. You can retry or enter the details manually.',
+        ? `We could not process your receipt: ${error}. You can retry or enter the details manually.`
+        : 'We could not process your receipt. You can retry or enter the details manually.',
       data: {
         receiptId,
         error,

@@ -5,6 +5,8 @@ import groupRoutes from './group.routes';
 import expenseRoutes from './expense.routes';
 import settlementRoutes from './settlement.routes';
 import receiptRoutes from './receipt.routes';
+import notificationRoutes from './notification.routes';
+import analyticsRoutes from './analytics.routes';
 import { expenseController } from '../controllers/expense.controller';
 import { settlementController } from '../controllers/settlement.controller';
 import { receiptController } from '../controllers/receipt.controller';
@@ -19,6 +21,8 @@ router.use('/groups', groupRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/settlements', settlementRoutes);
 router.use('/receipts', receiptRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/analytics', analyticsRoutes);
 
 // Nested group routes for expenses
 router.get('/groups/:groupId/expenses', authenticate, expenseController.getGroupExpenses.bind(expenseController));
