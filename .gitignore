@@ -1,0 +1,22 @@
+# Root level gitignore
+# The backend has its own .gitignore
+
+# Accidentally created npm artifacts
+node_modules/
+package-lock.json
+package.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
