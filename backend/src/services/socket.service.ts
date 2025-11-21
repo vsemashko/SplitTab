@@ -193,6 +193,19 @@ export class SocketService {
   getIO(): Server | null {
     return this.io;
   }
+
+  /**
+   * Close Socket.IO server gracefully
+   */
+  close() {
+    if (this.io) {
+      this.io.close(() => {
+        logger.info('Socket.IO server closed gracefully');
+      });
+      this.userSockets.clear();
+      this.io = null;
+    }
+  }
 }
 
 export const socketService = new SocketService();
