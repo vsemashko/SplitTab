@@ -1,10 +1,10 @@
 # Root level gitignore
 # The backend has its own .gitignore
 
-# Accidentally created npm artifacts
+# Accidentally created npm artifacts at root level only
 node_modules/
-package-lock.json
-package.json
+/package-lock.json
+/package.json
 
 # IDE
 .vscode/
