@@ -204,7 +204,19 @@ export class ReceiptService {
     const updated = await prisma.receipt.update({
       where: { id },
       data: {
-        ...data,
+        merchantName: data.merchantName,
+        totalAmount: data.totalAmount,
+        currency: data.currency,
+        receiptDate: data.receiptDate,
+        tax: data.tax,
+        tip: data.tip,
+        subtotal: data.subtotal,
+        ...(data.lineItems !== undefined && { lineItems: data.lineItems ?? Prisma.JsonNull }),
+        ...(data.expenseId && {
+          expense: {
+            connect: { id: data.expenseId },
+          },
+        }),
         updatedAt: new Date(),
       },
       include: {
@@ -244,7 +256,7 @@ export class ReceiptService {
         ocrStatus: status,
         ocrProcessedAt: new Date(),
         ocrConfidence: result.confidence,
-        ocrData: result.rawData,
+        ocrData: result.rawData ?? Prisma.JsonNull,
         ocrError: error,
         merchantName: result.merchantName,
         totalAmount: result.totalAmount,
@@ -253,7 +265,7 @@ export class ReceiptService {
         tax: result.tax,
         tip: result.tip,
         subtotal: result.subtotal,
-        lineItems: result.lineItems,
+        lineItems: result.lineItems ?? Prisma.JsonNull,
         updatedAt: new Date(),
       },
       include: {
@@ -480,7 +492,7 @@ export class ReceiptService {
         tax: corrections.tax ?? receipt.tax,
         tip: corrections.tip ?? receipt.tip,
         subtotal: corrections.subtotal ?? receipt.subtotal,
-        lineItems: corrections.lineItems ?? receipt.lineItems,
+        lineItems: corrections.lineItems ?? (receipt.lineItems ?? Prisma.JsonNull),
         updatedAt: new Date(),
       },
       include: {

@@ -115,8 +115,8 @@ export class OCRService {
     // Calculate average confidence
     let totalConfidence = 0;
     let confidenceCount = 0;
-    pages.forEach((page: { blocks?: Array<{ confidence?: number }> }) => {
-      page.blocks?.forEach((block: { confidence?: number }) => {
+    pages.forEach((page) => {
+      page.blocks?.forEach((block) => {
         if (block.confidence) {
           totalConfidence += block.confidence;
           confidenceCount++;
@@ -132,8 +132,8 @@ export class OCRService {
       confidence,
       rawData: {
         provider: 'google',
-        textAnnotations: detections,
-        fullTextAnnotation: documentResult.fullTextAnnotation,
+        textAnnotations: JSON.parse(JSON.stringify(detections)),
+        fullTextAnnotation: JSON.parse(JSON.stringify(documentResult.fullTextAnnotation)),
       },
       ...extractedData,
     };
@@ -184,7 +184,7 @@ export class OCRService {
       confidence,
       rawData: {
         provider: 'aws',
-        expenseDocuments,
+        expenseDocuments: JSON.parse(JSON.stringify(expenseDocuments)),
       },
       ...extractedData,
     };

@@ -27,7 +27,7 @@ export class NotificationService {
         type: data.type,
         title: data.title,
         message: data.message,
-        data: data.data || null,
+        data: data.data ?? Prisma.JsonNull,
         actionUrl: data.actionUrl,
         priority: data.priority || 'normal',
         category: data.category,

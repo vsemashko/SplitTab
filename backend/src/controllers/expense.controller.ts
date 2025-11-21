@@ -71,17 +71,29 @@ export class ExpenseController {
       const { groupId } = req.params;
       const { limit, offset, category, startDate, endDate } = req.query;
 
+      type ExpenseCategory =
+        | 'food_dining'
+        | 'groceries'
+        | 'transportation'
+        | 'entertainment'
+        | 'utilities'
+        | 'rent'
+        | 'shopping'
+        | 'healthcare'
+        | 'travel'
+        | 'other';
+
       const options: {
         limit?: number;
         offset?: number;
-        category?: string;
+        category?: ExpenseCategory;
         startDate?: Date;
         endDate?: Date;
       } = {};
 
       if (limit) options.limit = parseInt(limit as string, 10);
       if (offset) options.offset = parseInt(offset as string, 10);
-      if (category) options.category = category as string;
+      if (category) options.category = category as ExpenseCategory;
       if (startDate) options.startDate = new Date(startDate as string);
       if (endDate) options.endDate = new Date(endDate as string);
 
