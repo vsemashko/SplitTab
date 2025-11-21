@@ -70,7 +70,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || 'Registration failed. Please try again.';
       set({
         isLoading: false,
         error: errorMessage,

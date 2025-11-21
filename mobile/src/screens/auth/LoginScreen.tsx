@@ -1,7 +1,7 @@
 /**
  * Login Screen
  */
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export const LoginScreen: React.FC<AuthStackScreenProps<'Login'>> = ({ navigation }) => {
   const { login, isLoading, error, clearError } = useAuthStore();
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     control,
@@ -48,7 +47,7 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'Login'>> = ({ navigatio
       clearError();
       await login(data.email, data.password);
       // Navigation will be handled automatically by auth state change
-    } catch (err: any) {
+    } catch {
       Alert.alert('Login Failed', error || 'Please check your credentials and try again.');
     }
   };
@@ -122,7 +121,7 @@ export const LoginScreen: React.FC<AuthStackScreenProps<'Login'>> = ({ navigatio
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Text style={styles.footerText}>Don&apos;t have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.signUpText}>Sign Up</Text>
           </TouchableOpacity>

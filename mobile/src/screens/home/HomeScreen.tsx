@@ -19,11 +19,8 @@ export const HomeScreen: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.info}>
           This is a placeholder home screen.{'\n\n'}
-          Phase 3 will implement:{'\n'}
-          • Dashboard with balance summary{'\n'}
-          • Recent expenses{'\n'}
-          • Quick actions{'\n'}
-          • Bottom tab navigation
+          Phase 3 will implement:{'\n'}• Dashboard with balance summary{'\n'}• Recent expenses{'\n'}
+          • Quick actions{'\n'}• Bottom tab navigation
         </Text>
       </View>
 

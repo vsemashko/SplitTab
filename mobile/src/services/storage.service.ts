@@ -26,10 +26,7 @@ class StorageService {
   }
 
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
-    await Promise.all([
-      this.setAccessToken(accessToken),
-      this.setRefreshToken(refreshToken),
-    ]);
+    await Promise.all([this.setAccessToken(accessToken), this.setRefreshToken(refreshToken)]);
   }
 
   async clearTokens(): Promise<void> {

@@ -17,7 +17,7 @@ export const RootNavigator: React.FC = () => {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   if (isLoading) {
     return <LoadingSpinner />;

@@ -13,9 +13,7 @@ export const isValidEmail = (email: string): boolean => {
 /**
  * Validate password strength
  */
-export const validatePassword = (
-  password: string
-): { isValid: boolean; errors: string[] } => {
+export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   if (password.length < 8) {

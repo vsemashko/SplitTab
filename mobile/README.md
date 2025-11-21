@@ -26,22 +26,26 @@ React Native mobile application for SplitTab - an expense sharing and bill split
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your API endpoints
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 ```
 
 4. Run on specific platform:
+
 ```bash
 npm run ios      # iOS Simulator (macOS only)
 npm run android  # Android Emulator
@@ -124,6 +128,7 @@ The app connects to the SplitTab backend API. See `src/api/` for API client impl
 ### Real-time Updates
 
 WebSocket connection for real-time notifications:
+
 - Group updates
 - Expense additions
 - Balance changes
@@ -148,11 +153,13 @@ Requires EAS (Expo Application Services) account.
 ## Testing
 
 Run tests:
+
 ```bash
 npm test
 ```
 
 Run tests in watch mode:
+
 ```bash
 npm run test:watch
 ```

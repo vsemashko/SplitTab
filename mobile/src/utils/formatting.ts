@@ -19,16 +19,19 @@ export const formatCurrency = (
 /**
  * Format date
  */
-export const formatDate = (date: string | Date, format: 'short' | 'medium' | 'long' = 'medium'): string => {
+export const formatDate = (
+  date: string | Date,
+  format: 'short' | 'medium' | 'long' = 'medium'
+): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsMap: Record<'short' | 'medium' | 'long', Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
-  }[format];
+  };
 
-  return new Intl.DateTimeFormat('en-US', options).format(dateObj);
+  return new Intl.DateTimeFormat('en-US', optionsMap[format]).format(dateObj);
 };
 
 /**

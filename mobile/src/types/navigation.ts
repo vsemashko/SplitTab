@@ -78,9 +78,3 @@ export type ExpensesStackScreenProps<T extends keyof ExpensesStackParamList> =
 
 export type SettlementsStackScreenProps<T extends keyof SettlementsStackParamList> =
   NativeStackScreenProps<SettlementsStackParamList, T>;
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
-}

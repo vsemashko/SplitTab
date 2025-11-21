@@ -32,7 +32,10 @@ const registerSchema = z
     displayName: z.string().optional(),
     password: z
       .string()
-      .min(VALIDATION.MIN_PASSWORD_LENGTH, `Password must be at least ${VALIDATION.MIN_PASSWORD_LENGTH} characters`)
+      .min(
+        VALIDATION.MIN_PASSWORD_LENGTH,
+        `Password must be at least ${VALIDATION.MIN_PASSWORD_LENGTH} characters`
+      )
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
       .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
       .regex(/[0-9]/, 'Password must contain at least one number'),
@@ -73,7 +76,7 @@ export const RegisterScreen: React.FC<AuthStackScreenProps<'Register'>> = ({ nav
         password: data.password,
       });
       // Navigation will be handled automatically by auth state change
-    } catch (err: any) {
+    } catch {
       Alert.alert('Registration Failed', error || 'Please try again later.');
     }
   };

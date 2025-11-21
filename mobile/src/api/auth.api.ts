@@ -3,7 +3,7 @@
  */
 import { apiClient } from './client';
 import { API_ENDPOINTS } from '@/utils/constants';
-import { ApiResponse, LoginResponse, RegisterData, User } from '@/types';
+import { ApiResponse, LoginResponse, RegisterData } from '@/types';
 
 export const authApi = {
   login: async (email: string, password: string): Promise<ApiResponse<LoginResponse>> => {
@@ -26,10 +26,7 @@ export const authApi = {
     return await apiClient.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
   },
 
-  resetPassword: async (
-    token: string,
-    newPassword: string
-  ): Promise<ApiResponse<void>> => {
+  resetPassword: async (token: string, newPassword: string): Promise<ApiResponse<void>> => {
     return await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, {
       token,
       newPassword,

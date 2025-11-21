@@ -80,7 +80,7 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
         <View style={styles.header}>
           <Text style={styles.title}>Forgot Password?</Text>
           <Text style={styles.subtitle}>
-            Enter your email address and we'll send you instructions to reset your password
+            Enter your email address and we&apos;ll send you instructions to reset your password
           </Text>
         </View>
 
@@ -113,10 +113,7 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
             style={styles.submitButton}
           />
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Login')}
-            style={styles.backToLogin}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.backToLogin}>
             <Text style={styles.backToLoginText}>Back to Sign In</Text>
           </TouchableOpacity>
         </View>
