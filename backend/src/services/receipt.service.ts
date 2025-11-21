@@ -492,7 +492,7 @@ export class ReceiptService {
         tax: corrections.tax ?? receipt.tax,
         tip: corrections.tip ?? receipt.tip,
         subtotal: corrections.subtotal ?? receipt.subtotal,
-        lineItems: corrections.lineItems ?? (receipt.lineItems ?? Prisma.JsonNull),
+        lineItems: corrections.lineItems ?? receipt.lineItems ?? Prisma.JsonNull,
         updatedAt: new Date(),
       },
       include: {
