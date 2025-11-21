@@ -42,7 +42,9 @@ export const API_ENDPOINTS = {
     MEMBERS: (id: string) => `/groups/${id}/members`,
     ADD_MEMBER: (id: string) => `/groups/${id}/members`,
     REMOVE_MEMBER: (id: string, userId: string) => `/groups/${id}/members/${userId}`,
+    UPDATE_MEMBER_ROLE: (id: string, userId: string) => `/groups/${id}/members/${userId}/role`,
     BALANCES: (id: string) => `/groups/${id}/balances`,
+    STATISTICS: (id: string) => `/groups/${id}/statistics`,
   },
   EXPENSES: {
     LIST: '/expenses',

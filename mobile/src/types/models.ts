@@ -19,9 +19,15 @@ export interface Group {
   id: string;
   name: string;
   description?: string;
-  currency: string;
+  groupType: 'trip' | 'home' | 'couple' | 'other';
+  imageUrl?: string;
+  defaultCurrency: string;
+  simplifyDebts: boolean;
+  requireExpenseApproval: boolean;
   createdBy: string;
   members: GroupMember[];
+  memberCount?: number;
+  yourBalance?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +37,39 @@ export interface GroupMember {
   user: User;
   role: 'admin' | 'member';
   joinedAt: string;
+}
+
+export interface GroupStatistics {
+  totalExpenses: number;
+  totalAmount: number;
+  averageExpense: number;
+  topPayer: {
+    userId: string;
+    name: string;
+    amount: number;
+  };
+  expensesByCategory: {
+    category: string;
+    count: number;
+    total: number;
+  }[];
+}
+
+export interface CreateGroupData {
+  name: string;
+  description?: string;
+  groupType: 'trip' | 'home' | 'couple' | 'other';
+  defaultCurrency?: string;
+  simplifyDebts?: boolean;
+}
+
+export interface UpdateGroupData {
+  name?: string;
+  description?: string;
+  groupType?: 'trip' | 'home' | 'couple' | 'other';
+  defaultCurrency?: string;
+  simplifyDebts?: boolean;
+  requireExpenseApproval?: boolean;
 }
 
 export interface Expense {
