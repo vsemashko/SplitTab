@@ -23,7 +23,7 @@ export const usersApi = {
       uri: imageUri,
       type: 'image/jpeg',
       name: 'avatar.jpg',
-    } as any);
+    } as unknown as Blob);
 
     return await apiClient.upload(API_ENDPOINTS.USERS.UPLOAD_AVATAR, formData, onProgress);
   },

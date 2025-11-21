@@ -62,13 +62,13 @@ export const expensesApi = {
     id: string,
     imageUri: string,
     onProgress?: (progress: number) => void
-  ): Promise<ApiResponse<{ receiptUrl: string; ocrData?: any }>> => {
+  ): Promise<ApiResponse<{ receiptUrl: string; ocrData?: unknown }>> => {
     const formData = new FormData();
     formData.append('receipt', {
       uri: imageUri,
       type: 'image/jpeg',
       name: 'receipt.jpg',
-    } as any);
+    } as unknown as Blob);
 
     return await apiClient.upload(API_ENDPOINTS.EXPENSES.UPLOAD_RECEIPT(id), formData, onProgress);
   },

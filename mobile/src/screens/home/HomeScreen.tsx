@@ -2,7 +2,7 @@
  * Home Dashboard Screen
  */
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { useAuthStore } from '@/store';
 import { BalanceSummary, QuickActions, RecentExpensesList } from '@/components/home';
 import { colors, spacing } from '@/theme';

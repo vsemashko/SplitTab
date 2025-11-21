@@ -28,8 +28,8 @@ export function generateAccessToken(userId: string, email: string): string {
   };
 
   return jwt.sign(payload, config.jwt.accessSecret, {
-    expiresIn: config.jwt.accessExpiry,
-  });
+    expiresIn: config.jwt.accessExpiry as string,
+  } as jwt.SignOptions);
 }
 
 /**
@@ -47,8 +47,8 @@ export function generateRefreshToken(userId: string, email: string): string {
   };
 
   return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiry,
-  });
+    expiresIn: config.jwt.refreshExpiry as string,
+  } as jwt.SignOptions);
 }
 
 /**
