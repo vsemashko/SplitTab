@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { receiptService } from '../services/receipt.service';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
+import { addOCRJob } from '../queues/ocr.queue';
 
 export class ReceiptController {
   /**
@@ -32,8 +33,17 @@ export class ReceiptController {
 
       logger.info(`Receipt uploaded: ${receipt.id} by ${req.user.email}`);
 
-      // TODO: Trigger OCR processing job here
-      // await ocrQueue.add({ receiptId: receipt.id });
+      // Trigger OCR processing job
+      try {
+        await addOCRJob({
+          receiptId: receipt.id,
+          filePath: receipt.fileUrl,
+        });
+        logger.info(`OCR job queued for receipt: ${receipt.id}`);
+      } catch (queueError) {
+        logger.error(`Error queueing OCR job for receipt ${receipt.id}:`, queueError);
+        // Don't fail the upload if queue fails - OCR can be retried later
+      }
 
       res.status(201).json({
         success: true,
@@ -280,16 +290,41 @@ export class ReceiptController {
       }
 
       // Update status to pending
-      await receiptService.updateOCRResults(id, {}, 'pending');
+      await receiptService.updateOCRResults(id, { confidence: 0, rawData: null }, 'pending');
 
-      // TODO: Trigger OCR processing job
-      // await ocrQueue.add({ receiptId: id });
+      // Trigger OCR processing job
+      await addOCRJob({
+        receiptId: id,
+        filePath: receipt.fileUrl,
+      });
 
       logger.info(`OCR retry triggered for receipt: ${id}`);
 
       res.json({
         success: true,
         message: 'OCR processing has been queued',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get queue statistics
+   * GET /api/v1/receipts/queue/stats
+   */
+  async getQueueStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new ApiError(401, 'Authentication required');
+      }
+
+      const { getQueueStats } = await import('../queues/ocr.queue');
+      const stats = await getQueueStats();
+
+      res.json({
+        success: true,
+        data: { queueStats: stats },
       });
     } catch (error) {
       next(error);

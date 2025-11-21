@@ -1,4 +1,5 @@
 import { PrismaClient, Receipt } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 import { deleteFile } from '../utils/fileUpload';
 
@@ -27,16 +28,16 @@ export interface UpdateReceiptData {
 }
 
 export interface OCRResult {
+  confidence: number;
+  rawData: any;
   merchantName?: string;
-  totalAmount?: number;
+  totalAmount?: Decimal;
   currency?: string;
   receiptDate?: Date;
-  tax?: number;
-  tip?: number;
-  subtotal?: number;
-  lineItems?: any;
-  confidence?: number;
-  rawData?: any;
+  tax?: Decimal;
+  tip?: Decimal;
+  subtotal?: Decimal;
+  lineItems?: any[];
 }
 
 export class ReceiptService {

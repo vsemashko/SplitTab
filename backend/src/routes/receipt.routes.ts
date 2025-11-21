@@ -18,6 +18,17 @@ router.post(
 );
 
 /**
+ * @route   GET /api/v1/receipts/queue/stats
+ * @desc    Get queue statistics
+ * @access  Private
+ */
+router.get(
+  '/queue/stats',
+  authenticate,
+  receiptController.getQueueStats.bind(receiptController)
+);
+
+/**
  * @route   GET /api/v1/receipts/statistics/ocr
  * @desc    Get OCR statistics
  * @access  Private
