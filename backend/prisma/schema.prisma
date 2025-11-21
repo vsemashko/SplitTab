@@ -336,3 +336,28 @@ model Receipt {
   @@index([createdAt])
   @@index([receiptDate])
 }
+
+// Notifications table
+model Notification {
+  id              String    @id @default(uuid())
+  userId          String
+  type            String    // receipt_processed, expense_created, payment_received, etc.
+  title           String
+  message         String
+  data            Json?     // Additional context data
+  read            Boolean   @default(false)
+  readAt          DateTime?
+  actionUrl       String?   // Deep link or URL for the notification
+  priority        String    @default("normal") // low, normal, high, urgent
+  category        String?   // categorize notifications (receipt, expense, payment, etc.)
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime? // Optional expiration for time-sensitive notifications
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+  @@index([type])
+  @@index([category])
+}
