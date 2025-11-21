@@ -5,11 +5,15 @@ import { logger } from './utils/logger';
 import { connectDatabase } from './config/database';
 import { connectRedis } from './config/redis';
 import { socketService } from './services/socket.service';
+import { initializeSentry, flushSentry } from './services/sentry.service';
 
 const PORT = config.port || 3000;
 
 async function startServer() {
   try {
+    // Initialize Sentry error tracking (must be first)
+    initializeSentry(app);
+
     // Connect to database
     await connectDatabase();
     logger.info('Database connected successfully');
@@ -34,14 +38,21 @@ async function startServer() {
     });
 
     // Graceful shutdown
-    const gracefulShutdown = () => {
+    const gracefulShutdown = async () => {
       logger.info('Shutdown signal received: closing server');
+
       httpServer.close(() => {
         logger.info('HTTP server closed');
-        socketService.close();
-        logger.info('Socket.IO server closed');
-        process.exit(0);
       });
+
+      socketService.close();
+      logger.info('Socket.IO server closed');
+
+      // Flush Sentry events before exit
+      await flushSentry(2000);
+      logger.info('Sentry events flushed');
+
+      process.exit(0);
     };
 
     process.on('SIGTERM', gracefulShutdown);

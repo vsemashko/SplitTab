@@ -7,8 +7,19 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { notFound } from './middleware/notFound';
 import { apiLimiter } from './middleware/rateLimit';
+import {
+  sentryRequestHandler,
+  sentryTracingHandler,
+  sentryErrorHandler,
+} from './services/sentry.service';
 
 const app: Application = express();
+
+// Sentry request handler MUST be the first middleware
+app.use(sentryRequestHandler);
+
+// Sentry tracing handler for performance monitoring
+app.use(sentryTracingHandler);
 
 // Security middleware
 app.use(helmet());
@@ -38,6 +49,9 @@ app.use('/api/v1', apiRoutes);
 
 // 404 handler
 app.use(notFound);
+
+// Sentry error handler MUST be before other error handlers
+app.use(sentryErrorHandler);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

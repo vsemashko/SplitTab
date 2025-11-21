@@ -1,8 +1,12 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { validateEnv, type EnvConfig } from './env.validation';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
+
+// Validate environment variables at startup (fails fast if invalid)
+const env: EnvConfig = validateEnv();
 
 interface Config {
   nodeEnv: string;
@@ -50,66 +54,48 @@ interface Config {
 }
 
 export const config: Config = {
-  nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3000', 10),
-  apiVersion: process.env.API_VERSION || 'v1',
-  databaseUrl: process.env.DATABASE_URL || '',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  nodeEnv: env.NODE_ENV,
+  port: env.PORT,
+  apiVersion: env.API_VERSION,
+  databaseUrl: env.DATABASE_URL,
+  redisUrl: env.REDIS_URL,
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
-    accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
-    refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '30d',
+    accessSecret: env.JWT_ACCESS_SECRET,
+    refreshSecret: env.JWT_REFRESH_SECRET,
+    accessExpiry: env.JWT_ACCESS_EXPIRY,
+    refreshExpiry: env.JWT_REFRESH_EXPIRY,
   },
-  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:3001',
-  ],
+  allowedOrigins: env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()),
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    windowMs: env.RATE_LIMIT_WINDOW_MS,
+    maxRequests: env.RATE_LIMIT_MAX_REQUESTS,
   },
   email: {
-    from: process.env.EMAIL_FROM || 'noreply@splittab.com',
-    apiKey: process.env.EMAIL_API_KEY || '',
+    from: env.EMAIL_FROM,
+    apiKey: env.EMAIL_API_KEY || '',
   },
   oauth: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: env.GOOGLE_CLIENT_ID || '',
+      clientSecret: env.GOOGLE_CLIENT_SECRET || '',
     },
     apple: {
-      clientId: process.env.APPLE_CLIENT_ID || '',
-      teamId: process.env.APPLE_TEAM_ID || '',
-      keyId: process.env.APPLE_KEY_ID || '',
-      privateKey: process.env.APPLE_PRIVATE_KEY || '',
+      clientId: env.APPLE_CLIENT_ID || '',
+      teamId: env.APPLE_TEAM_ID || '',
+      keyId: env.APPLE_KEY_ID || '',
+      privateKey: env.APPLE_PRIVATE_KEY || '',
     },
   },
   aws: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-    region: process.env.AWS_REGION || 'us-east-1',
-    s3Bucket: process.env.AWS_S3_BUCKET || 'splittab-uploads',
+    accessKeyId: env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY || '',
+    region: env.AWS_REGION,
+    s3Bucket: env.AWS_S3_BUCKET || '',
   },
   sentry: {
-    dsn: process.env.SENTRY_DSN || '',
+    dsn: env.SENTRY_DSN || '',
   },
-  logLevel: process.env.LOG_LEVEL || 'info',
+  logLevel: env.LOG_LEVEL,
 };
-
-// Validate required environment variables in production
-if (config.nodeEnv === 'production') {
-  const required = [
-    'DATABASE_URL',
-    'JWT_ACCESS_SECRET',
-    'JWT_REFRESH_SECRET',
-  ];
-
-  for (const key of required) {
-    if (!process.env[key]) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-  }
-}
 
 export default config;
