@@ -3,6 +3,19 @@ import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
 
+// Type alias for expense categories
+type ExpenseCategory =
+  | 'food_dining'
+  | 'groceries'
+  | 'transportation'
+  | 'entertainment'
+  | 'utilities'
+  | 'rent'
+  | 'shopping'
+  | 'healthcare'
+  | 'travel'
+  | 'other';
+
 export interface ExpenseParticipantData {
   userId: string;
   paidAmount: number;

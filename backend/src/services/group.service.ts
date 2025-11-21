@@ -3,6 +3,9 @@ import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
 
+// Type alias for group types
+type GroupType = 'friends' | 'trip' | 'home' | 'couple' | 'event' | 'project' | 'other';
+
 export interface CreateGroupData {
   name: string;
   description?: string;

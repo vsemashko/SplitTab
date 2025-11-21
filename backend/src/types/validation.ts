@@ -174,6 +174,15 @@ export const createSettlementSchema = z
     path: ['payeeId'],
   });
 
+export const updateSettlementSchema = z.object({
+  amount: z.number().positive().max(999999.99).optional(),
+  currency: currencySchema.optional(),
+  paymentMethod: paymentMethodSchema.optional(),
+  referenceNumber: z.string().optional(),
+  notes: z.string().max(500).optional(),
+  date: z.coerce.date().optional(),
+});
+
 export const confirmSettlementSchema = z.object({
   confirmed: z.boolean(),
 });
