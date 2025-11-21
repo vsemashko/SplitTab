@@ -38,11 +38,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onPress }) => {
   const balanceInfo = group.yourBalance !== undefined ? formatBalance(group.yourBalance) : null;
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
           {group.imageUrl ? (
@@ -62,16 +58,15 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onPress }) => {
             </Text>
           )}
           <Text style={styles.memberCount}>
-            {group.memberCount || group.members.length} member{(group.memberCount || group.members.length) !== 1 ? 's' : ''}
+            {group.memberCount || group.members.length} member
+            {(group.memberCount || group.members.length) !== 1 ? 's' : ''}
           </Text>
         </View>
       </View>
 
       {balanceInfo && (
         <View style={styles.balanceContainer}>
-          <Text style={[styles.balanceText, { color: balanceInfo.color }]}>
-            {balanceInfo.text}
-          </Text>
+          <Text style={[styles.balanceText, { color: balanceInfo.color }]}>{balanceInfo.text}</Text>
         </View>
       )}
     </TouchableOpacity>

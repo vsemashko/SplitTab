@@ -60,7 +60,8 @@ export const ForgotPasswordScreen: React.FC<AuthStackScreenProps<'ForgotPassword
       );
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to send reset email. Please try again.';
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Failed to send reset email. Please try again.';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);

@@ -12,15 +12,16 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { MainTabScreenProps } from '@/types';
+// import { useNavigation } from '@react-navigation/native';
+// import type { MainTabScreenProps } from '@/types';
 import { groupsApi } from '@/api';
 import { GroupCard } from '@/components/group';
 import { colors, spacing, textStyles } from '@/theme';
 import type { Group } from '@/types';
 
 export const GroupsListScreen: React.FC = () => {
-  const navigation = useNavigation<MainTabScreenProps<'Groups'>['navigation']>();
+  // const navigation = useNavigation<MainTabScreenProps<'Groups'>['navigation']>();
+  // TODO: Enable navigation when implementing group details and create group screens
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,10 +90,7 @@ export const GroupsListScreen: React.FC = () => {
         data={groups}
         renderItem={renderGroup}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          groups.length === 0 && styles.listContentEmpty,
-        ]}
+        contentContainerStyle={[styles.listContent, groups.length === 0 && styles.listContentEmpty]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
