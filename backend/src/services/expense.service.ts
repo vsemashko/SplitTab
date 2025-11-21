@@ -240,7 +240,12 @@ export class ExpenseService {
       throw new ApiError(403, 'You must be a member of the group to view expenses');
     }
 
-    const where: any = {
+    const where: {
+      groupId: string;
+      deletedAt: null;
+      category?: string;
+      date?: { gte?: Date; lte?: Date };
+    } = {
       groupId,
       deletedAt: null,
     };
@@ -612,7 +617,10 @@ export class ExpenseService {
     // By category
     const categoryMap = new Map<ExpenseCategory, { count: number; total: number }>();
     expenses.forEach((expense) => {
-      const existing = categoryMap.get(expense.category as ExpenseCategory) || { count: 0, total: 0 };
+      const existing = categoryMap.get(expense.category as ExpenseCategory) || {
+        count: 0,
+        total: 0,
+      };
       categoryMap.set(expense.category as ExpenseCategory, {
         count: existing.count + 1,
         total: existing.total + Number(expense.amount),

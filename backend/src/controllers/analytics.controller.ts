@@ -96,7 +96,11 @@ export class AnalyticsController {
       const userId = req.user.userId;
       const { startDate, endDate } = req.query;
 
-      const where: any = { uploadedById: userId, deletedAt: null };
+      const where: {
+        uploadedById: string;
+        deletedAt: null;
+        createdAt?: { gte?: Date; lte?: Date };
+      } = { uploadedById: userId, deletedAt: null };
 
       if (startDate || endDate) {
         where.createdAt = {};
@@ -177,7 +181,10 @@ export class AnalyticsController {
       const userId = req.user.userId;
       const { startDate, endDate } = req.query;
 
-      const where: any = { paidById: userId, deletedAt: null };
+      const where: { paidById: string; deletedAt: null; createdAt?: { gte?: Date; lte?: Date } } = {
+        paidById: userId,
+        deletedAt: null,
+      };
 
       if (startDate || endDate) {
         where.createdAt = {};

@@ -391,7 +391,9 @@ export class AuthService {
   /**
    * Get active sessions for user
    */
-  async getUserSessions(userId: string): Promise<any[]> {
+  async getUserSessions(
+    userId: string
+  ): Promise<Array<{ id: string; createdAt: Date; expiresAt: Date }>> {
     return prisma.session.findMany({
       where: {
         userId,

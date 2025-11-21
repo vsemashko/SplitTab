@@ -1,4 +1,4 @@
-import { PrismaClient, Notification } from '@prisma/client';
+import { PrismaClient, Notification, Prisma } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 import { socketService } from './socket.service';
 
@@ -9,7 +9,7 @@ export interface CreateNotificationData {
   type: string;
   title: string;
   message: string;
-  data?: any;
+  data?: Prisma.JsonValue;
   actionUrl?: string;
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   category?: string;
@@ -27,7 +27,7 @@ export class NotificationService {
         type: data.type,
         title: data.title,
         message: data.message,
-        data: (data.data as any) || null,
+        data: data.data || null,
         actionUrl: data.actionUrl,
         priority: data.priority || 'normal',
         category: data.category,
@@ -93,7 +93,14 @@ export class NotificationService {
       offset?: number;
     } = {}
   ): Promise<{ notifications: Notification[]; total: number; unreadCount: number }> {
-    const where: any = {
+    const where: {
+      userId: string;
+      OR: Array<{ expiresAt: null } | { expiresAt: { gte: Date } }>;
+      read?: boolean;
+      type?: string;
+      category?: string;
+      priority?: string;
+    } = {
       userId,
       OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     };

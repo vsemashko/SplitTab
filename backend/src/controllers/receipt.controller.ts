@@ -97,7 +97,11 @@ export class ReceiptController {
 
       const { limit, offset, status } = req.query;
 
-      const options: any = {};
+      const options: {
+        limit?: number;
+        offset?: number;
+        status?: string;
+      } = {};
       if (limit) options.limit = parseInt(limit as string, 10);
       if (offset) options.offset = parseInt(offset as string, 10);
       if (status) options.status = status as string;

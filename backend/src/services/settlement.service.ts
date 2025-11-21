@@ -166,7 +166,11 @@ export class SettlementService {
       throw new ApiError(403, 'You must be a member of the group');
     }
 
-    const where: any = {
+    const where: {
+      groupId: string;
+      deletedAt: null;
+      status?: 'pending' | 'confirmed' | 'cancelled';
+    } = {
       groupId,
       deletedAt: null,
     };
@@ -217,7 +221,11 @@ export class SettlementService {
       offset?: number;
     }
   ): Promise<{ settlements: Settlement[]; total: number }> {
-    const where: any = {
+    const where: {
+      deletedAt: null;
+      OR: Array<{ payerId: string } | { payeeId: string }>;
+      status?: 'pending' | 'confirmed' | 'cancelled';
+    } = {
       deletedAt: null,
       OR: [{ payerId: userId }, { payeeId: userId }],
     };

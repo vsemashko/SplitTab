@@ -135,7 +135,7 @@ export class SocketService {
   /**
    * Emit notification to user
    */
-  emitToUser(userId: string, event: string, data: any) {
+  emitToUser(userId: string, event: string, data: unknown) {
     if (!this.io) return;
     this.io.to(`user:${userId}`).emit(event, data);
     logger.debug(`Emitted ${event} to user ${userId}`);
@@ -144,7 +144,7 @@ export class SocketService {
   /**
    * Emit to group
    */
-  emitToGroup(groupId: string, event: string, data: any) {
+  emitToGroup(groupId: string, event: string, data: unknown) {
     if (!this.io) return;
     this.io.to(`group:${groupId}`).emit(event, data);
     logger.debug(`Emitted ${event} to group ${groupId}`);
@@ -153,7 +153,7 @@ export class SocketService {
   /**
    * Emit to all connected clients
    */
-  emitToAll(event: string, data: any) {
+  emitToAll(event: string, data: unknown) {
     if (!this.io) return;
     this.io.emit(event, data);
     logger.debug(`Emitted ${event} to all users`);
@@ -162,28 +162,28 @@ export class SocketService {
   /**
    * Send new notification to user
    */
-  sendNotification(userId: string, notification: any) {
+  sendNotification(userId: string, notification: unknown) {
     this.emitToUser(userId, 'notification:new', notification);
   }
 
   /**
    * Send receipt update to user
    */
-  sendReceiptUpdate(userId: string, receipt: any) {
+  sendReceiptUpdate(userId: string, receipt: unknown) {
     this.emitToUser(userId, 'receipt:updated', receipt);
   }
 
   /**
    * Send expense update to group
    */
-  sendExpenseUpdate(groupId: string, expense: any) {
+  sendExpenseUpdate(groupId: string, expense: unknown) {
     this.emitToGroup(groupId, 'expense:updated', expense);
   }
 
   /**
    * Send settlement update to group
    */
-  sendSettlementUpdate(groupId: string, settlement: any) {
+  sendSettlementUpdate(groupId: string, settlement: unknown) {
     this.emitToGroup(groupId, 'settlement:updated', settlement);
   }
 

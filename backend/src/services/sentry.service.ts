@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { config } from '../config';
-import { Application } from 'express';
+import { Application, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -75,6 +75,7 @@ export function initializeSentry(_app: Application): void {
     debug: config.nodeEnv === 'development' && !!process.env.SENTRY_DEBUG,
   });
 
+  // eslint-disable-next-line no-console
   console.log('✅ Sentry initialized successfully');
 }
 
@@ -82,19 +83,19 @@ export function initializeSentry(_app: Application): void {
  * Sentry request handler middleware
  * Must be the first middleware
  */
-export const sentryRequestHandler = (_req: any, _res: any, next: any) => next();
+export const sentryRequestHandler = (_req: Request, _res: Response, next: NextFunction) => next();
 
 /**
  * Sentry tracing middleware
  * Captures performance data
  */
-export const sentryTracingHandler = (_req: any, _res: any, next: any) => next();
+export const sentryTracingHandler = (_req: Request, _res: Response, next: NextFunction) => next();
 
 /**
  * Sentry error handler middleware
  * Must be before any other error middleware but after all controllers
  */
-export const sentryErrorHandler = (error: any, _req: any, _res: any, next: any) => {
+export const sentryErrorHandler: ErrorRequestHandler = (error, _req, _res, next) => {
   // Capture all errors with status code >= 500
   if (error.statusCode && error.statusCode >= 500) {
     Sentry.captureException(error);
@@ -115,7 +116,7 @@ export const sentryErrorHandler = (error: any, _req: any, _res: any, next: any) 
 /**
  * Capture exception manually
  */
-export function captureException(error: Error, context?: Record<string, any>): void {
+export function captureException(error: Error, context?: Record<string, unknown>): void {
   if (!config.sentry.dsn) return;
 
   Sentry.withScope((scope) => {
@@ -162,7 +163,7 @@ export function clearUser(): void {
  */
 export function addBreadcrumb(
   message: string,
-  data?: Record<string, any>,
+  data?: Record<string, unknown>,
   level: Sentry.SeverityLevel = 'info'
 ): void {
   if (!config.sentry.dsn) return;
@@ -178,13 +179,16 @@ export function addBreadcrumb(
 /**
  * Start a transaction for performance monitoring
  */
-export function startTransaction(name: string, op: string): any {
+export function startTransaction(name: string, op: string) {
   if (!config.sentry.dsn) return undefined;
 
-  return Sentry.startSpan({
-    name,
-    op,
-  }, (span) => span);
+  return Sentry.startSpan(
+    {
+      name,
+      op,
+    },
+    (span) => span
+  );
 }
 
 /**

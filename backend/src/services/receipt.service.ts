@@ -1,4 +1,4 @@
-import { PrismaClient, Receipt } from '@prisma/client';
+import { PrismaClient, Receipt, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 import { deleteFile } from '../utils/fileUpload';
@@ -24,12 +24,12 @@ export interface UpdateReceiptData {
   tax?: number;
   tip?: number;
   subtotal?: number;
-  lineItems?: any;
+  lineItems?: Prisma.JsonValue;
 }
 
 export interface OCRResult {
   confidence: number;
-  rawData: any;
+  rawData: Prisma.JsonValue;
   merchantName?: string;
   totalAmount?: Decimal;
   currency?: string;
@@ -37,7 +37,7 @@ export interface OCRResult {
   tax?: Decimal;
   tip?: Decimal;
   subtotal?: Decimal;
-  lineItems?: any[];
+  lineItems?: Prisma.JsonValue;
 }
 
 export class ReceiptService {
@@ -122,7 +122,11 @@ export class ReceiptService {
       status?: string;
     }
   ): Promise<{ receipts: Receipt[]; total: number }> {
-    const where: any = {
+    const where: {
+      uploadedById: string;
+      deletedAt: null;
+      ocrStatus?: string;
+    } = {
       uploadedById: userId,
       deletedAt: null,
     };
@@ -410,7 +414,10 @@ export class ReceiptService {
     failed: number;
     averageConfidence?: number;
   }> {
-    const where: any = {
+    const where: {
+      deletedAt: null;
+      uploadedById?: string;
+    } = {
       deletedAt: null,
     };
 
@@ -473,7 +480,7 @@ export class ReceiptService {
         tax: corrections.tax ?? receipt.tax,
         tip: corrections.tip ?? receipt.tip,
         subtotal: corrections.subtotal ?? receipt.subtotal,
-        lineItems: (corrections.lineItems ?? receipt.lineItems) as any,
+        lineItems: corrections.lineItems ?? receipt.lineItems,
         updatedAt: new Date(),
       },
       include: {
@@ -508,7 +515,17 @@ export class ReceiptService {
       sortOrder?: 'asc' | 'desc';
     }
   ): Promise<{ receipts: Receipt[]; total: number }> {
-    const where: any = {
+    const where: {
+      uploadedById: string;
+      deletedAt: null;
+      merchantName?: { contains: string; mode: 'insensitive' };
+      totalAmount?: { gte?: number; lte?: number };
+      currency?: string;
+      receiptDate?: { gte?: Date; lte?: Date };
+      ocrStatus?: string;
+      expenseId?: string | { not: null } | null;
+      ocrConfidence?: { gte?: number; lte?: number };
+    } = {
       uploadedById: userId,
       deletedAt: null,
     };
@@ -661,8 +678,12 @@ export class ReceiptService {
     userId: string,
     receiptIds?: string[],
     includeLineItems: boolean = false
-  ): Promise<any[]> {
-    const where: any = {
+  ): Promise<Array<Record<string, unknown>>> {
+    const where: {
+      uploadedById: string;
+      deletedAt: null;
+      id?: { in: string[] };
+    } = {
       uploadedById: userId,
       deletedAt: null,
     };

@@ -42,7 +42,9 @@ export class ExpenseController {
       const expense = await expenseService.getExpenseById(id);
 
       // Verify user is a participant
-      const isParticipant = expense.participants.some((p: any) => p.userId === req.user?.userId);
+      const isParticipant = expense.participants.some(
+        (p: { userId: string }) => p.userId === req.user?.userId
+      );
       if (!isParticipant) {
         throw new ApiError(403, 'You must be a participant in this expense');
       }
@@ -69,7 +71,13 @@ export class ExpenseController {
       const { groupId } = req.params;
       const { limit, offset, category, startDate, endDate } = req.query;
 
-      const options: any = {};
+      const options: {
+        limit?: number;
+        offset?: number;
+        category?: string;
+        startDate?: Date;
+        endDate?: Date;
+      } = {};
 
       if (limit) options.limit = parseInt(limit as string, 10);
       if (offset) options.offset = parseInt(offset as string, 10);
@@ -105,7 +113,10 @@ export class ExpenseController {
 
       const { limit, offset } = req.query;
 
-      const options: any = {};
+      const options: {
+        limit?: number;
+        offset?: number;
+      } = {};
 
       if (limit) options.limit = parseInt(limit as string, 10);
       if (offset) options.offset = parseInt(offset as string, 10);

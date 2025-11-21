@@ -3,6 +3,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { ApiError } from '../middleware/errorHandler';
 import fs from 'fs';
+import { Request } from 'express';
 
 // Allowed MIME types for receipts
 const ALLOWED_MIME_TYPES = [
@@ -37,7 +38,7 @@ const storage = multer.diskStorage({
 });
 
 // File filter
-const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {

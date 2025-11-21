@@ -70,7 +70,11 @@ export class SettlementController {
       const { groupId } = req.params;
       const { status, limit, offset } = req.query;
 
-      const options: any = {};
+      const options: {
+        status?: 'pending' | 'confirmed' | 'cancelled';
+        limit?: number;
+        offset?: number;
+      } = {};
 
       if (status) options.status = status as 'pending' | 'confirmed' | 'cancelled';
       if (limit) options.limit = parseInt(limit as string, 10);
@@ -104,7 +108,11 @@ export class SettlementController {
 
       const { status, limit, offset } = req.query;
 
-      const options: any = {};
+      const options: {
+        status?: 'pending' | 'confirmed' | 'cancelled';
+        limit?: number;
+        offset?: number;
+      } = {};
 
       if (status) options.status = status as 'pending' | 'confirmed' | 'cancelled';
       if (limit) options.limit = parseInt(limit as string, 10);

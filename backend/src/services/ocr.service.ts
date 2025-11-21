@@ -115,8 +115,8 @@ export class OCRService {
     // Calculate average confidence
     let totalConfidence = 0;
     let confidenceCount = 0;
-    pages.forEach((page: any) => {
-      page.blocks?.forEach((block: any) => {
+    pages.forEach((page: { blocks?: Array<{ confidence?: number }> }) => {
+      page.blocks?.forEach((block: { confidence?: number }) => {
         if (block.confidence) {
           totalConfidence += block.confidence;
           confidenceCount++;
@@ -265,7 +265,9 @@ export class OCRService {
   /**
    * Extract data from AWS Textract summary fields
    */
-  private extractAWSTextractData(summaryFields: any[]): Partial<OCRResult> {
+  private extractAWSTextractData(
+    summaryFields: Array<{ Type?: { Text?: string }; ValueDetection?: { Text?: string } }>
+  ): Partial<OCRResult> {
     const result: Partial<OCRResult> = {};
 
     summaryFields.forEach((field) => {

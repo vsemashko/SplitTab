@@ -16,7 +16,14 @@ export class NotificationController {
 
       const { read, type, category, priority, limit, offset } = req.query;
 
-      const filters: any = {};
+      const filters: {
+        read?: boolean;
+        type?: string;
+        category?: string;
+        priority?: string;
+        limit?: number;
+        offset?: number;
+      } = {};
       if (read !== undefined) filters.read = read === 'true';
       if (type) filters.type = type as string;
       if (category) filters.category = category as string;

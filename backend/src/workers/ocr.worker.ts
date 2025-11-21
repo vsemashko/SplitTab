@@ -60,7 +60,7 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
     } catch (notifError) {
       logger.error('Error sending OCR success notification:', notifError);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error processing OCR for receipt ${receiptId}:`, error);
 
     // Update receipt with error status if this is the last attempt
@@ -69,7 +69,7 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
         receiptId,
         { confidence: 0, rawData: null },
         'failed',
-        error.message || 'OCR processing failed'
+        error instanceof Error ? error.message : 'OCR processing failed'
       );
       logger.error(`OCR failed permanently for receipt ${receiptId} after all retries`);
 
@@ -78,7 +78,7 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
         await notificationService.notifyReceiptOCRFailed(
           receipt.uploadedById,
           receiptId,
-          error.message
+          error instanceof Error ? error.message : 'Unknown error'
         );
       } catch (notifError) {
         logger.error('Error sending OCR failure notification:', notifError);
