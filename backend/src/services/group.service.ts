@@ -48,7 +48,7 @@ export class GroupService {
         description: data.description,
         groupType: data.groupType || 'other',
         defaultCurrency: data.defaultCurrency || 'USD',
-        createdById: data.createdById,
+        createdBy: data.createdById,
         members: {
           create: {
             userId: data.createdById,
@@ -105,7 +105,7 @@ export class GroupService {
             },
           },
         },
-        createdBy: {
+        creator: {
           select: {
             id: true,
             name: true,
@@ -526,11 +526,11 @@ export class GroupService {
     ]);
 
     const totalExpenses = expenses.length;
-    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
 
     const settledAmount = settlements
       .filter((s) => s.status === 'confirmed')
-      .reduce((sum, settlement) => sum + settlement.amount, 0);
+      .reduce((sum, settlement) => sum + Number(settlement.amount), 0);
 
     const pendingSettlements = settlements.filter((s) => s.status === 'pending').length;
 

@@ -109,7 +109,7 @@ export const createExpenseSchema = z
     notes: z.string().max(1000).optional(),
     date: z.coerce.date(),
     splitMethod: splitMethodSchema.optional(),
-    splitData: z.record(z.any()).optional(),
+    splitData: z.record(z.string(), z.any()).optional(),
     participants: z.array(expenseParticipantSchema).min(1),
   })
   .refine(
@@ -141,7 +141,7 @@ export const updateExpenseSchema = z.object({
   notes: z.string().max(1000).optional(),
   date: z.coerce.date().optional(),
   splitMethod: splitMethodSchema.optional(),
-  splitData: z.record(z.any()).optional(),
+  splitData: z.record(z.string(), z.any()).optional(),
   participants: z.array(expenseParticipantSchema).min(1).optional(),
 });
 

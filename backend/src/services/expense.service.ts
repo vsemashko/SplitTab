@@ -1,7 +1,39 @@
-import { PrismaClient, Expense } from '@prisma/client';
+import { PrismaClient, Expense, Prisma } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
+
+// Type for expense with relations
+type ExpenseWithParticipants = Prisma.ExpenseGetPayload<{
+  include: {
+    participants: {
+      include: {
+        user: {
+          select: {
+            id: true;
+            name: true;
+            email: true;
+            profilePictureUrl: true;
+          };
+        };
+      };
+    };
+    paidBy: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+        profilePictureUrl: true;
+      };
+    };
+    group: {
+      select: {
+        id: true;
+        name: true;
+      };
+    };
+  };
+}>;
 
 // Type alias for expense categories
 type ExpenseCategory =
@@ -140,7 +172,7 @@ export class ExpenseService {
   /**
    * Get expense by ID
    */
-  async getExpenseById(id: string): Promise<Expense> {
+  async getExpenseById(id: string): Promise<ExpenseWithParticipants> {
     const expense = await prisma.expense.findUnique({
       where: { id, deletedAt: null },
       include: {
@@ -342,6 +374,10 @@ export class ExpenseService {
       throw new NotFoundError('Expense not found');
     }
 
+    if (!expense.group) {
+      throw new ApiError(404, 'Associated group not found');
+    }
+
     // Check if user is admin or the one who created the expense
     const member = expense.group.members.find((m) => m.userId === userId);
     if (!member) {
@@ -355,7 +391,7 @@ export class ExpenseService {
 
     // If participants are being updated, validate amounts
     if (data.participants) {
-      const amount = data.amount || expense.amount;
+      const amount = data.amount || Number(expense.amount);
       this.validateParticipantAmounts(amount, data.participants);
 
       // Delete existing participants and create new ones
@@ -435,6 +471,10 @@ export class ExpenseService {
 
     if (!expense) {
       throw new NotFoundError('Expense not found');
+    }
+
+    if (!expense.group) {
+      throw new ApiError(404, 'Associated group not found');
     }
 
     // Check if user is admin or the one who created the expense
@@ -567,15 +607,15 @@ export class ExpenseService {
     });
 
     const totalExpenses = expenses.length;
-    const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
     // By category
     const categoryMap = new Map<ExpenseCategory, { count: number; total: number }>();
     expenses.forEach((expense) => {
-      const existing = categoryMap.get(expense.category) || { count: 0, total: 0 };
-      categoryMap.set(expense.category, {
+      const existing = categoryMap.get(expense.category as ExpenseCategory) || { count: 0, total: 0 };
+      categoryMap.set(expense.category as ExpenseCategory, {
         count: existing.count + 1,
-        total: existing.total + expense.amount,
+        total: existing.total + Number(expense.amount),
       });
     });
 
@@ -592,7 +632,7 @@ export class ExpenseService {
       const existing = monthMap.get(monthKey) || { count: 0, total: 0 };
       monthMap.set(monthKey, {
         count: existing.count + 1,
-        total: existing.total + expense.amount,
+        total: existing.total + Number(expense.amount),
       });
     });
 
@@ -614,7 +654,7 @@ export class ExpenseService {
       };
       payerMap.set(expense.paidById, {
         name: existing.name,
-        totalPaid: existing.totalPaid + expense.amount,
+        totalPaid: existing.totalPaid + Number(expense.amount),
       });
     });
 

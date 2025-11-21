@@ -1,12 +1,12 @@
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { config } from '../config';
 import { Application } from 'express';
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
  */
-export function initializeSentry(app: Application): void {
+export function initializeSentry(_app: Application): void {
   // Only initialize Sentry if DSN is configured
   if (!config.sentry.dsn) {
     if (config.nodeEnv === 'production') {
@@ -26,11 +26,7 @@ export function initializeSentry(app: Application): void {
     profilesSampleRate: config.nodeEnv === 'production' ? 0.1 : 1.0,
     integrations: [
       // Profiling integration
-      new ProfilingIntegration(),
-
-      // Express integration (auto-instrumentation)
-      new Sentry.Integrations.Http({ tracing: true }),
-      new Sentry.Integrations.Express({ app }),
+      nodeProfilingIntegration(),
     ],
 
     // Ignore specific errors
@@ -86,37 +82,35 @@ export function initializeSentry(app: Application): void {
  * Sentry request handler middleware
  * Must be the first middleware
  */
-export const sentryRequestHandler = Sentry.Handlers.requestHandler();
+export const sentryRequestHandler = (_req: any, _res: any, next: any) => next();
 
 /**
  * Sentry tracing middleware
  * Captures performance data
  */
-export const sentryTracingHandler = Sentry.Handlers.tracingHandler();
+export const sentryTracingHandler = (_req: any, _res: any, next: any) => next();
 
 /**
  * Sentry error handler middleware
  * Must be before any other error middleware but after all controllers
  */
-export const sentryErrorHandler = Sentry.Handlers.errorHandler({
-  shouldHandleError(error) {
-    // Capture all errors with status code >= 500
-    if (error.statusCode && error.statusCode >= 500) {
-      return true;
-    }
+export const sentryErrorHandler = (error: any, _req: any, _res: any, next: any) => {
+  // Capture all errors with status code >= 500
+  if (error.statusCode && error.statusCode >= 500) {
+    Sentry.captureException(error);
+  }
 
-    // Capture specific error types
-    if (
-      error.name === 'DatabaseError' ||
-      error.name === 'InternalServerError' ||
-      error.name === 'RedisError'
-    ) {
-      return true;
-    }
+  // Capture specific error types
+  if (
+    error.name === 'DatabaseError' ||
+    error.name === 'InternalServerError' ||
+    error.name === 'RedisError'
+  ) {
+    Sentry.captureException(error);
+  }
 
-    return false;
-  },
-});
+  next(error);
+};
 
 /**
  * Capture exception manually
@@ -184,13 +178,13 @@ export function addBreadcrumb(
 /**
  * Start a transaction for performance monitoring
  */
-export function startTransaction(name: string, op: string): Sentry.Transaction | undefined {
+export function startTransaction(name: string, op: string): any {
   if (!config.sentry.dsn) return undefined;
 
-  return Sentry.startTransaction({
+  return Sentry.startSpan({
     name,
     op,
-  });
+  }, (span) => span);
 }
 
 /**

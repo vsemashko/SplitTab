@@ -9,7 +9,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Server
-  PORT: z.string().regex(/^\d+$/).transform(Number).default('3000'),
+  PORT: z.string().regex(/^\d+$/).default('3000').transform(Number),
   API_VERSION: z.string().default('v1'),
 
   // Database
@@ -28,8 +28,8 @@ const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000,http://localhost:3001'),
 
   // Rate Limiting
-  RATE_LIMIT_WINDOW_MS: z.string().regex(/^\d+$/).transform(Number).default('900000'),
-  RATE_LIMIT_MAX_REQUESTS: z.string().regex(/^\d+$/).transform(Number).default('100'),
+  RATE_LIMIT_WINDOW_MS: z.string().regex(/^\d+$/).default('900000').transform(Number),
+  RATE_LIMIT_MAX_REQUESTS: z.string().regex(/^\d+$/).default('100').transform(Number),
 
   // Email
   EMAIL_FROM: z.string().email().default('noreply@splittab.com'),
@@ -58,15 +58,15 @@ const envSchema = z.object({
   OCR_CONFIDENCE_THRESHOLD: z
     .string()
     .regex(/^\d*\.?\d+$/)
-    .transform(Number)
-    .default('0.8'),
-  OCR_MAX_RETRIES: z.string().regex(/^\d+$/).transform(Number).default('3'),
+    .default('0.8')
+    .transform(Number),
+  OCR_MAX_RETRIES: z.string().regex(/^\d+$/).default('3').transform(Number),
 
   // Background Jobs (Bull Queue)
   BULL_REDIS_HOST: z.string().default('localhost'),
-  BULL_REDIS_PORT: z.string().regex(/^\d+$/).transform(Number).default('6379'),
+  BULL_REDIS_PORT: z.string().regex(/^\d+$/).default('6379').transform(Number),
   BULL_REDIS_PASSWORD: z.string().optional(),
-  OCR_QUEUE_CONCURRENCY: z.string().regex(/^\d+$/).transform(Number).default('5'),
+  OCR_QUEUE_CONCURRENCY: z.string().regex(/^\d+$/).default('5').transform(Number),
 
   // Monitoring & Logging
   SENTRY_DSN: z.string().url('Invalid SENTRY_DSN format').optional(),

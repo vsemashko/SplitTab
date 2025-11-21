@@ -42,7 +42,7 @@ export class ExpenseController {
       const expense = await expenseService.getExpenseById(id);
 
       // Verify user is a participant
-      const isParticipant = expense.participants.some((p) => p.userId === req.user?.userId);
+      const isParticipant = expense.participants.some((p: any) => p.userId === req.user?.userId);
       if (!isParticipant) {
         throw new ApiError(403, 'You must be a participant in this expense');
       }

@@ -286,6 +286,10 @@ export class SettlementService {
       throw new NotFoundError('Settlement not found');
     }
 
+    if (!settlement.group) {
+      throw new ApiError(404, 'Associated group not found');
+    }
+
     // Check if user is involved in the settlement or is a group admin
     const member = settlement.group.members.find((m) => m.userId === userId);
     if (!member) {
@@ -409,6 +413,10 @@ export class SettlementService {
       throw new NotFoundError('Settlement not found');
     }
 
+    if (!settlement.group) {
+      throw new ApiError(404, 'Associated group not found');
+    }
+
     // Check if user is admin or involved in settlement
     const member = settlement.group.members.find((m) => m.userId === userId);
     if (!member) {
@@ -506,7 +514,7 @@ export class SettlementService {
       for (const expense of expenses) {
         const participant = expense.participants.find((p) => p.userId === member.userId);
         if (participant) {
-          balance += participant.paidAmount - participant.owedAmount;
+          balance += Number(participant.paidAmount) - Number(participant.owedAmount);
         }
       }
 
@@ -520,7 +528,7 @@ export class SettlementService {
         },
       });
 
-      balance -= settlementsAsPayer.reduce((sum, s) => sum + s.amount, 0);
+      balance -= settlementsAsPayer.reduce((sum, s) => sum + Number(s.amount), 0);
 
       // Add confirmed settlements where user is payee
       const settlementsAsPayee = await prisma.settlement.findMany({
@@ -532,7 +540,7 @@ export class SettlementService {
         },
       });
 
-      balance += settlementsAsPayee.reduce((sum, s) => sum + s.amount, 0);
+      balance += settlementsAsPayee.reduce((sum, s) => sum + Number(s.amount), 0);
 
       balances.set(member.userId, {
         name: member.user.name,
