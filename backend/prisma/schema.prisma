@@ -1,0 +1,281 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users table
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  emailVerified       Boolean   @default(false)
+  passwordHash        String?
+  name                String
+  profilePictureUrl   String?
+  phoneNumber         String?
+  phoneVerified       Boolean   @default(false)
+
+  // Preferences
+  defaultCurrency     String    @default("USD") @db.Char(3)
+  timezone            String    @default("UTC")
+  language            String    @default("en") @db.Char(2)
+
+  // OAuth
+  googleId            String?   @unique
+  appleId             String?   @unique
+
+  // Security
+  twoFactorEnabled    Boolean   @default(false)
+  twoFactorSecret     String?
+
+  // Metadata
+  lastLoginAt         DateTime?
+  lastLoginIp         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  // Relations
+  groupsOwned         Group[]           @relation("GroupCreator")
+  groupMemberships    GroupMember[]
+  expensesCreated     Expense[]         @relation("ExpenseCreator")
+  expenseParticipations ExpenseParticipant[]
+  paymentsAsPayer     Settlement[]      @relation("PaymentPayer")
+  paymentsAsPayee     Settlement[]      @relation("PaymentPayee")
+  sessions            Session[]
+  notifications       Notification[]
+
+  @@index([email])
+  @@index([googleId])
+  @@index([appleId])
+  @@index([createdAt])
+}
+
+// Groups table
+model Group {
+  id                      String    @id @default(uuid())
+  name                    String
+  description             String?
+  groupType               String    @default("other")
+  imageUrl                String?
+
+  // Settings
+  defaultCurrency         String    @default("USD") @db.Char(3)
+  simplifyDebts           Boolean   @default(true)
+  requireExpenseApproval  Boolean   @default(false)
+
+  // Metadata
+  createdBy               String
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+
+  // Relations
+  creator                 User            @relation("GroupCreator", fields: [createdBy], references: [id])
+  members                 GroupMember[]
+  expenses                Expense[]
+  settlements             Settlement[]
+
+  @@index([createdBy])
+  @@index([createdAt])
+  @@index([groupType])
+}
+
+// Group Members junction table
+model GroupMember {
+  id          String    @id @default(uuid())
+  groupId     String
+  userId      String
+  role        String    @default("member")
+
+  // Metadata
+  joinedAt    DateTime  @default(now())
+  leftAt      DateTime?
+  invitedBy   String?
+
+  // Relations
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@index([joinedAt])
+}
+
+// Expenses table
+model Expense {
+  id              String    @id @default(uuid())
+  groupId         String?
+
+  // Expense details
+  amount          Decimal   @db.Decimal(15, 2)
+  currency        String    @default("USD") @db.Char(3)
+  description     String
+  category        String
+  notes           String?
+
+  // Dates
+  date            DateTime
+
+  // Metadata
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  deletedBy       String?
+
+  // Split details
+  splitMethod     String    @default("equal")
+  splitData       Json?
+
+  // Relations
+  group           Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  creator         User                @relation("ExpenseCreator", fields: [createdBy], references: [id])
+  participants    ExpenseParticipant[]
+
+  @@index([groupId])
+  @@index([createdBy])
+  @@index([date(sort: Desc)])
+  @@index([category])
+  @@index([createdAt])
+}
+
+// Expense Participants junction table
+model ExpenseParticipant {
+  id          String    @id @default(uuid())
+  expenseId   String
+  userId      String
+
+  // Financial details
+  paidAmount  Decimal   @default(0) @db.Decimal(15, 2)
+  owedAmount  Decimal   @default(0) @db.Decimal(15, 2)
+
+  // Metadata
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  expense     Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
+}
+
+// Settlements table
+model Settlement {
+  id                  String    @id @default(uuid())
+  groupId             String?
+
+  // Payment details
+  payerId             String
+  payeeId             String
+  amount              Decimal   @db.Decimal(15, 2)
+  currency            String    @default("USD") @db.Char(3)
+
+  // Payment info
+  paymentMethod       String?
+  referenceNumber     String?
+  notes               String?
+
+  // Confirmation
+  confirmed           Boolean   @default(false)
+  confirmedAt         DateTime?
+  confirmedBy         String?
+
+  // Dates
+  date                DateTime
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  // Payment provider details
+  paymentProvider     String?
+  paymentProviderId   String?
+  paymentStatus       String?
+
+  // Relations
+  group               Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  payer               User      @relation("PaymentPayer", fields: [payerId], references: [id])
+  payee               User      @relation("PaymentPayee", fields: [payeeId], references: [id])
+
+  @@index([payerId])
+  @@index([payeeId])
+  @@index([groupId])
+  @@index([date])
+  @@index([createdAt])
+  @@index([confirmed])
+}
+
+// Sessions table
+model Session {
+  id            String    @id @default(uuid())
+  userId        String
+
+  // Token details
+  refreshToken  String    @unique
+  deviceName    String?
+  deviceType    String?
+  userAgent     String?
+  ipAddress     String?
+
+  // Metadata
+  createdAt     DateTime  @default(now())
+  lastUsedAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revoked       Boolean   @default(false)
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([expiresAt])
+  @@index([revoked])
+}
+
+// Notifications table
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+
+  // Notification details
+  type        String
+  title       String
+  message     String
+
+  // Related entities
+  expenseId   String?
+  settlementId String?
+  groupId     String?
+
+  // Delivery
+  channels    String[]
+  deliveredAt DateTime?
+
+  // User interaction
+  read        Boolean   @default(false)
+  readAt      DateTime?
+  clicked     Boolean   @default(false)
+  clickedAt   DateTime?
+
+  // Metadata
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime  @default(dbgenerated("now() + interval '30 days'"))
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+  @@index([type])
+  @@index([expiresAt])
+}
