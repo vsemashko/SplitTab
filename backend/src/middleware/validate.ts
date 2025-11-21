@@ -10,7 +10,7 @@ export const validate = (schema: ZodSchema) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const details = error.errors.map((err) => ({
+        const details = error.issues.map((err: any) => ({
           field: err.path.join('.'),
           message: err.message,
         }));
@@ -31,7 +31,7 @@ export const validateQuery = (schema: ZodSchema) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const details = error.errors.map((err) => ({
+        const details = error.issues.map((err: any) => ({
           field: err.path.join('.'),
           message: err.message,
         }));
@@ -52,7 +52,7 @@ export const validateParams = (schema: ZodSchema) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const details = error.errors.map((err) => ({
+        const details = error.issues.map((err: any) => ({
           field: err.path.join('.'),
           message: err.message,
         }));

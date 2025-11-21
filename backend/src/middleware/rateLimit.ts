@@ -6,8 +6,8 @@ import { config } from '../config';
  * Applies to all API endpoints
  */
 export const apiLimiter = rateLimit({
-  windowMs: config.rateLimitWindowMs || 15 * 60 * 1000, // 15 minutes
-  max: config.rateLimitMaxRequests || 100, // Limit each IP to 100 requests per windowMs
+  windowMs: config.rateLimit.windowMs || 15 * 60 * 1000, // 15 minutes
+  max: config.rateLimit.maxRequests || 100, // Limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
