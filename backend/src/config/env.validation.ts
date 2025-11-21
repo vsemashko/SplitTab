@@ -55,7 +55,11 @@ const envSchema = z.object({
   GOOGLE_CLOUD_PROJECT_ID: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   AWS_TEXTRACT_REGION: z.string().default('us-east-1'),
-  OCR_CONFIDENCE_THRESHOLD: z.string().regex(/^\d*\.?\d+$/).transform(Number).default('0.8'),
+  OCR_CONFIDENCE_THRESHOLD: z
+    .string()
+    .regex(/^\d*\.?\d+$/)
+    .transform(Number)
+    .default('0.8'),
   OCR_MAX_RETRIES: z.string().regex(/^\d+$/).transform(Number).default('3'),
 
   // Background Jobs (Bull Queue)
@@ -73,49 +77,53 @@ const envSchema = z.object({
  * Production-specific validations
  * These environment variables are required in production
  */
-const productionSchema = envSchema.refine(
-  (data) => {
-    if (data.NODE_ENV === 'production') {
-      // Ensure JWT secrets are strong in production
-      const required = [
-        data.JWT_ACCESS_SECRET.length >= 64,
-        data.JWT_REFRESH_SECRET.length >= 64,
-      ];
-      return required.every(Boolean);
+const productionSchema = envSchema
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        // Ensure JWT secrets are strong in production
+        const required = [
+          data.JWT_ACCESS_SECRET.length >= 64,
+          data.JWT_REFRESH_SECRET.length >= 64,
+        ];
+        return required.every(Boolean);
+      }
+      return true;
+    },
+    {
+      message: 'JWT secrets must be at least 64 characters in production',
     }
-    return true;
-  },
-  {
-    message: 'JWT secrets must be at least 64 characters in production',
-  }
-).refine(
-  (data) => {
-    if (data.NODE_ENV === 'production') {
-      // Ensure monitoring is configured in production
-      return !!data.SENTRY_DSN;
+  )
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        // Ensure monitoring is configured in production
+        return !!data.SENTRY_DSN;
+      }
+      return true;
+    },
+    {
+      message: 'SENTRY_DSN is required in production for error monitoring',
     }
-    return true;
-  },
-  {
-    message: 'SENTRY_DSN is required in production for error monitoring',
-  }
-).refine(
-  (data) => {
-    if (data.NODE_ENV === 'production') {
-      // Ensure AWS is configured for file uploads
-      const awsConfigured = !!(
-        data.AWS_ACCESS_KEY_ID &&
-        data.AWS_SECRET_ACCESS_KEY &&
-        data.AWS_S3_BUCKET
-      );
-      return awsConfigured;
+  )
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        // Ensure AWS is configured for file uploads
+        const awsConfigured = !!(
+          data.AWS_ACCESS_KEY_ID &&
+          data.AWS_SECRET_ACCESS_KEY &&
+          data.AWS_S3_BUCKET
+        );
+        return awsConfigured;
+      }
+      return true;
+    },
+    {
+      message:
+        'AWS credentials (ACCESS_KEY_ID, SECRET_ACCESS_KEY, S3_BUCKET) are required in production',
     }
-    return true;
-  },
-  {
-    message: 'AWS credentials (ACCESS_KEY_ID, SECRET_ACCESS_KEY, S3_BUCKET) are required in production',
-  }
-);
+  );
 
 export type EnvConfig = z.infer<typeof envSchema>;
 

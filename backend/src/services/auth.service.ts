@@ -76,7 +76,7 @@ export class AuthService {
     await this.createSession(user.id, tokens.refreshToken);
 
     // Return user without password hash
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     return {
       user: userWithoutPassword,
@@ -159,7 +159,10 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if user exists
-      throw new ApiError(404, 'If a user with this email exists, a password reset link has been sent');
+      throw new ApiError(
+        404,
+        'If a user with this email exists, a password reset link has been sent'
+      );
     }
 
     if (!user.passwordHash) {
@@ -364,7 +367,7 @@ export class AuthService {
     // Create session
     await this.createSession(user.id, tokens.refreshToken);
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     return {
       user: userWithoutPassword,

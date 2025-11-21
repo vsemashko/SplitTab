@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { authService } from '../../src/services/auth.service';
-import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -421,7 +420,12 @@ describe('Authentication Service', () => {
 
   describe('OAuth Login', () => {
     it('should create new user with OAuth', async () => {
-      const result = await authService.oauthLogin('google', 'google-123', 'oauth@example.com', 'OAuth User');
+      const result = await authService.oauthLogin(
+        'google',
+        'google-123',
+        'oauth@example.com',
+        'OAuth User'
+      );
 
       expect(result.user).toBeDefined();
       expect(result.user.email).toBe('oauth@example.com');
@@ -431,10 +435,20 @@ describe('Authentication Service', () => {
 
     it('should login existing user with OAuth', async () => {
       // Create user first
-      const first = await authService.oauthLogin('google', 'google-123', 'oauth@example.com', 'OAuth User');
+      const first = await authService.oauthLogin(
+        'google',
+        'google-123',
+        'oauth@example.com',
+        'OAuth User'
+      );
 
       // Login again with same OAuth
-      const second = await authService.oauthLogin('google', 'google-123', 'oauth@example.com', 'OAuth User');
+      const second = await authService.oauthLogin(
+        'google',
+        'google-123',
+        'oauth@example.com',
+        'OAuth User'
+      );
 
       expect(second.user.id).toBe(first.user.id);
     });
@@ -448,7 +462,12 @@ describe('Authentication Service', () => {
       });
 
       // Login with OAuth using same email
-      const result = await authService.oauthLogin('google', 'google-123', 'existing@example.com', 'Existing User');
+      const result = await authService.oauthLogin(
+        'google',
+        'google-123',
+        'existing@example.com',
+        'Existing User'
+      );
 
       const user = await prisma.user.findUnique({
         where: { id: result.user.id },

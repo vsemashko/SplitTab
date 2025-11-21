@@ -25,7 +25,12 @@ router.get('/:id', authenticate, userController.getUser.bind(userController));
  * @desc    Update user profile
  * @access  Private
  */
-router.put('/:id', authenticate, validate(updateUserSchema), userController.updateUser.bind(userController));
+router.put(
+  '/:id',
+  authenticate,
+  validate(updateUserSchema),
+  userController.updateUser.bind(userController)
+);
 
 /**
  * @route   DELETE /api/v1/users/:id

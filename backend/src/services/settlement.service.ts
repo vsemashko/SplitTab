@@ -155,7 +155,7 @@ export class SettlementService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
+        groupId_userId: {
           userId,
           groupId,
         },
@@ -266,7 +266,11 @@ export class SettlementService {
   /**
    * Update settlement
    */
-  async updateSettlement(id: string, data: UpdateSettlementData, userId: string): Promise<Settlement> {
+  async updateSettlement(
+    id: string,
+    data: UpdateSettlementData,
+    userId: string
+  ): Promise<Settlement> {
     const settlement = await prisma.settlement.findUnique({
       where: { id, deletedAt: null },
       include: {
@@ -452,7 +456,7 @@ export class SettlementService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
+        groupId_userId: {
           userId,
           groupId,
         },

@@ -220,7 +220,12 @@ export class ReceiptService {
   /**
    * Update OCR status and results
    */
-  async updateOCRResults(id: string, result: OCRResult, status: string, error?: string): Promise<Receipt> {
+  async updateOCRResults(
+    id: string,
+    result: OCRResult,
+    status: string,
+    error?: string
+  ): Promise<Receipt> {
     const receipt = await prisma.receipt.findUnique({
       where: { id },
     });
@@ -584,7 +589,10 @@ export class ReceiptService {
   /**
    * Batch retry OCR for multiple receipts
    */
-  async batchRetryOCR(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+  async batchRetryOCR(
+    receiptIds: string[],
+    userId: string
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
@@ -627,7 +635,10 @@ export class ReceiptService {
   /**
    * Batch delete receipts
    */
-  async batchDelete(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+  async batchDelete(
+    receiptIds: string[],
+    userId: string
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
@@ -741,9 +752,7 @@ export class ReceiptService {
     // Combine headers and rows
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-      ),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ].join('\n');
 
     return csvContent;

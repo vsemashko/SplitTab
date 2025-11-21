@@ -1,4 +1,4 @@
-import { PrismaClient, Expense, ExpenseCategory } from '@prisma/client';
+import { PrismaClient, Expense } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
@@ -184,7 +184,7 @@ export class ExpenseService {
     // Verify user is member of group
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
+        groupId_userId: {
           userId,
           groupId,
         },
@@ -448,7 +448,11 @@ export class ExpenseService {
   /**
    * Calculate equal split for participants
    */
-  calculateEqualSplit(amount: number, participantIds: string[], payerId: string): ExpenseParticipantData[] {
+  calculateEqualSplit(
+    amount: number,
+    participantIds: string[],
+    payerId: string
+  ): ExpenseParticipantData[] {
     const perPersonAmount = amount / participantIds.length;
 
     return participantIds.map((userId) => ({
@@ -482,7 +486,10 @@ export class ExpenseService {
   /**
    * Validate participant amounts
    */
-  private validateParticipantAmounts(totalAmount: number, participants: ExpenseParticipantData[]): void {
+  private validateParticipantAmounts(
+    totalAmount: number,
+    participants: ExpenseParticipantData[]
+  ): void {
     if (participants.length === 0) {
       throw new ApiError(400, 'Expense must have at least one participant');
     }
@@ -492,11 +499,17 @@ export class ExpenseService {
 
     // Allow small floating point differences (0.01)
     if (Math.abs(totalPaid - totalAmount) > 0.01) {
-      throw new ApiError(400, `Total paid amount (${totalPaid}) must equal expense amount (${totalAmount})`);
+      throw new ApiError(
+        400,
+        `Total paid amount (${totalPaid}) must equal expense amount (${totalAmount})`
+      );
     }
 
     if (Math.abs(totalOwed - totalAmount) > 0.01) {
-      throw new ApiError(400, `Total owed amount (${totalOwed}) must equal expense amount (${totalAmount})`);
+      throw new ApiError(
+        400,
+        `Total owed amount (${totalOwed}) must equal expense amount (${totalAmount})`
+      );
     }
   }
 
@@ -516,7 +529,7 @@ export class ExpenseService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
+        groupId_userId: {
           userId,
           groupId,
         },

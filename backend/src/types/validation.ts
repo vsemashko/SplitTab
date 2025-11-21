@@ -91,13 +91,7 @@ export const expenseCategorySchema = z.enum([
   'other',
 ]);
 
-export const splitMethodSchema = z.enum([
-  'equal',
-  'exact',
-  'percentage',
-  'shares',
-  'item',
-]);
+export const splitMethodSchema = z.enum(['equal', 'exact', 'percentage', 'shares', 'item']);
 
 export const expenseParticipantSchema = z.object({
   userId: uuidSchema,

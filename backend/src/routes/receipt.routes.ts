@@ -22,11 +22,7 @@ router.post(
  * @desc    Get queue statistics
  * @access  Private
  */
-router.get(
-  '/queue/stats',
-  authenticate,
-  receiptController.getQueueStats.bind(receiptController)
-);
+router.get('/queue/stats', authenticate, receiptController.getQueueStats.bind(receiptController));
 
 /**
  * @route   GET /api/v1/receipts/statistics/ocr
@@ -72,7 +68,11 @@ router.post('/:id/attach', authenticate, receiptController.attachToExpense.bind(
  * @desc    Detach receipt from expense
  * @access  Private
  */
-router.post('/:id/detach', authenticate, receiptController.detachFromExpense.bind(receiptController));
+router.post(
+  '/:id/detach',
+  authenticate,
+  receiptController.detachFromExpense.bind(receiptController)
+);
 
 /**
  * @route   POST /api/v1/receipts/:id/retry-ocr
@@ -93,7 +93,11 @@ router.delete('/:id', authenticate, receiptController.deleteReceipt.bind(receipt
  * @desc    Apply manual corrections to receipt OCR results
  * @access  Private
  */
-router.patch('/:id/correct', authenticate, receiptController.applyManualCorrection.bind(receiptController));
+router.patch(
+  '/:id/correct',
+  authenticate,
+  receiptController.applyManualCorrection.bind(receiptController)
+);
 
 /**
  * @route   POST /api/v1/receipts/search
@@ -107,7 +111,11 @@ router.post('/search', authenticate, receiptController.advancedSearch.bind(recei
  * @desc    Batch retry OCR for multiple receipts
  * @access  Private
  */
-router.post('/batch/retry-ocr', authenticate, receiptController.batchRetryOCR.bind(receiptController));
+router.post(
+  '/batch/retry-ocr',
+  authenticate,
+  receiptController.batchRetryOCR.bind(receiptController)
+);
 
 /**
  * @route   POST /api/v1/receipts/batch/delete

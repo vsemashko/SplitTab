@@ -56,7 +56,7 @@ export class UserService {
     });
 
     // Return user without password hash
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -84,7 +84,7 @@ export class UserService {
       throw new NotFoundError('User not found');
     }
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -121,7 +121,7 @@ export class UserService {
       },
     });
 
-    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 
@@ -368,7 +368,7 @@ export class UserService {
     });
 
     return users.map((user) => {
-      const { passwordHash: _, ...userWithoutPassword } = user;
+      const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
   }

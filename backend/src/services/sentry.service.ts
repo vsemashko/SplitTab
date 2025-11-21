@@ -48,7 +48,7 @@ export function initializeSentry(app: Application): void {
     ],
 
     // Before send hook - filter or modify events before sending
-    beforeSend(event, hint) {
+    beforeSend(event, _hint) {
       // Don't send events in development unless explicitly enabled
       if (config.nodeEnv === 'development' && !process.env.SENTRY_DEBUG) {
         return null;

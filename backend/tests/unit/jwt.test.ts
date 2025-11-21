@@ -6,7 +6,6 @@ import {
   verifyRefreshToken,
   extractTokenFromHeader,
 } from '../../src/utils/jwt';
-import { config } from '../../src/config';
 
 describe('JWT Utility Tests', () => {
   const testUserId = '123e4567-e89b-12d3-a456-426614174000';
@@ -195,10 +194,10 @@ describe('JWT Utility Tests', () => {
     });
 
     it('should generate different tokens for same user at different times', () => {
-      const token1 = generateAccessToken(testUserId, testEmail);
+      const _token1 = generateAccessToken(testUserId, testEmail);
 
       // Small delay to ensure different timestamps
-      const token2 = generateAccessToken(testUserId, testEmail);
+      const _token2 = generateAccessToken(testUserId, testEmail);
 
       // Tokens should be different due to different iat (issued at) claims
       // Note: They might be the same if generated in the same second

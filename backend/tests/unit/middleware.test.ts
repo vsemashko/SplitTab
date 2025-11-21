@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, optionalAuthenticate, requireEmailVerification } from '../../src/middleware/auth';
+import {
+  authenticate,
+  optionalAuthenticate,
+  requireEmailVerification,
+} from '../../src/middleware/auth';
 import { validate, validateQuery, validateParams } from '../../src/middleware/validate';
 import { errorHandler, ApiError } from '../../src/middleware/errorHandler';
 import { generateAccessToken } from '../../src/utils/jwt';
@@ -209,7 +213,9 @@ describe('Middleware Tests', () => {
         await requireEmailVerification(req, res, next);
 
         expect(next).toHaveBeenCalledWith(expect.any(ApiError));
-        expect((next as jest.Mock).mock.calls[0][0].message).toContain('Email verification required');
+        expect((next as jest.Mock).mock.calls[0][0].message).toContain(
+          'Email verification required'
+        );
 
         await prisma.user.delete({ where: { id: unverifiedUser.id } });
       });
@@ -319,7 +325,10 @@ describe('Middleware Tests', () => {
 
       it('should reject invalid query parameters', async () => {
         const querySchema = z.object({
-          page: z.string().transform(Number).refine((n) => n > 0),
+          page: z
+            .string()
+            .transform(Number)
+            .refine((n) => n > 0),
         });
 
         const req = {

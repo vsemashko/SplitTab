@@ -154,7 +154,7 @@ async function main() {
   const expense2 = await prisma.expense.create({
     data: {
       groupId: roommates.id,
-      amount: 85.50,
+      amount: 85.5,
       currency: 'USD',
       description: 'Electricity bill',
       category: 'utilities',
@@ -163,9 +163,9 @@ async function main() {
       splitMethod: 'equal',
       participants: {
         create: [
-          { userId: alice.id, paidAmount: 0, owedAmount: 28.50 },
-          { userId: bob.id, paidAmount: 85.50, owedAmount: 28.50 },
-          { userId: carol.id, paidAmount: 0, owedAmount: 28.50 },
+          { userId: alice.id, paidAmount: 0, owedAmount: 28.5 },
+          { userId: bob.id, paidAmount: 85.5, owedAmount: 28.5 },
+          { userId: carol.id, paidAmount: 0, owedAmount: 28.5 },
         ],
       },
     },
@@ -185,7 +185,7 @@ async function main() {
         create: [
           { userId: alice.id, paidAmount: 0, owedAmount: 42.49 },
           { userId: bob.id, paidAmount: 0, owedAmount: 42.49 },
-          { userId: carol.id, paidAmount: 127.48, owedAmount: 42.50 },
+          { userId: carol.id, paidAmount: 127.48, owedAmount: 42.5 },
         ],
       },
     },
@@ -236,7 +236,7 @@ async function main() {
   const expense6 = await prisma.expense.create({
     data: {
       groupId: dinnerClub.id,
-      amount: 156.80,
+      amount: 156.8,
       currency: 'USD',
       description: 'Italian restaurant',
       category: 'food_dining',
@@ -245,10 +245,10 @@ async function main() {
       splitMethod: 'equal',
       participants: {
         create: [
-          { userId: alice.id, paidAmount: 0, owedAmount: 39.20 },
-          { userId: bob.id, paidAmount: 0, owedAmount: 39.20 },
-          { userId: carol.id, paidAmount: 0, owedAmount: 39.20 },
-          { userId: dave.id, paidAmount: 156.80, owedAmount: 39.20 },
+          { userId: alice.id, paidAmount: 0, owedAmount: 39.2 },
+          { userId: bob.id, paidAmount: 0, owedAmount: 39.2 },
+          { userId: carol.id, paidAmount: 0, owedAmount: 39.2 },
+          { userId: dave.id, paidAmount: 156.8, owedAmount: 39.2 },
         ],
       },
     },
