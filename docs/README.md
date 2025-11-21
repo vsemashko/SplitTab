@@ -74,6 +74,78 @@ Cutting-edge features leveraging AI and advanced integrations.
 
 ---
 
+### Implementation Plans
+
+#### [Implementation Roadmap](./Implementation-Roadmap.md)
+Master implementation roadmap with high-level milestones and progress tracking.
+
+**Key Contents:**
+- Phase overview with checkboxes
+- Month-by-month milestones
+- Success criteria for each phase
+- Dependencies and blockers
+- Risk management
+- Review checkpoints
+- Metrics dashboard
+
+---
+
+#### [Phase 1 Implementation Plan](./Phase-1-Implementation-Plan.md)
+Detailed week-by-week plan for MVP (16 weeks).
+
+**Week-by-Week Breakdown:**
+- Week 1: Project setup & infrastructure
+- Weeks 2-4: Backend foundation & auth
+- Weeks 5-8: iOS app core features
+- Weeks 9-12: Web app development
+- Weeks 13-16: Testing, polish & launch
+
+**400+ Tasks** organized by:
+- Backend development
+- iOS development
+- Web development
+- Testing & QA
+- Deployment
+
+---
+
+#### [Phase 2 Implementation Plan](./Phase-2-Implementation-Plan.md)
+Detailed plan for enhanced features (12 weeks).
+
+**Week-by-Week Breakdown:**
+- Weeks 17-20: Receipt OCR & payments
+- Weeks 21-24: Advanced features
+- Weeks 25-28: Analytics & polish
+
+**300+ Tasks** including:
+- OCR integration
+- Payment systems
+- Advanced splits
+- Recurring expenses
+- Notifications
+- Analytics
+
+---
+
+#### [Phase 3 Implementation Plan](./Phase-3-Implementation-Plan.md)
+Detailed plan for advanced features (16 weeks).
+
+**Week-by-Week Breakdown:**
+- Weeks 29-32: AI & banking integration
+- Weeks 33-36: Social features & trips
+- Weeks 37-40: Enterprise & analytics
+- Weeks 41-44: Polish & production launch
+
+**350+ Tasks** including:
+- AI/ML features
+- Bank integration (Plaid)
+- Trip planning
+- Offline mode
+- Localization
+- Production launch
+
+---
+
 ### Technical Documentation
 
 #### [Technical Architecture](./Technical-Architecture.md)
@@ -180,6 +252,13 @@ Comprehensive testing approach.
 2. Review phase documents in order
 3. Reference [UI/UX Guidelines](./UI-UX-Guidelines.md) for design decisions
 
+### For Project Managers / Scrum Masters
+1. Review [Implementation Roadmap](./Implementation-Roadmap.md) for high-level plan
+2. Use [Phase 1 Implementation Plan](./Phase-1-Implementation-Plan.md) for sprint planning
+3. Track progress using checkboxes in implementation plans
+4. Reference phase plans for detailed task breakdowns
+5. Monitor success metrics and KPIs from roadmap
+
 ### For Developers
 1. Review [Technical Architecture](./Technical-Architecture.md)
 2. Study [Data Models](./Data-Models.md)
@@ -207,6 +286,10 @@ Comprehensive testing approach.
 | Phase 1 - MVP | Implementation | PM, Dev | Draft |
 | Phase 2 - Enhanced | Implementation | PM, Dev | Draft |
 | Phase 3 - Advanced | Implementation | PM, Dev | Draft |
+| Implementation Roadmap | Planning | PM, Scrum | Active |
+| Phase 1 Implementation Plan | Planning | Dev, PM | Active |
+| Phase 2 Implementation Plan | Planning | Dev, PM | Active |
+| Phase 3 Implementation Plan | Planning | Dev, PM | Active |
 | Technical Architecture | Technical | Dev, Arch | Draft |
 | Data Models | Technical | Dev, DBA | Draft |
 | API Specifications | Technical | Dev, API | Draft |
