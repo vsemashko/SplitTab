@@ -3,8 +3,19 @@
 ![Node Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3.3-blue)
 ![License](https://img.shields.io/badge/license-ISC-green)
+![Status](https://img.shields.io/badge/status-production--ready-success)
 
 SplitTab is a comprehensive expense sharing and bill splitting application inspired by Splitwise. It features receipt scanning with OCR, real-time notifications, advanced analytics, and seamless expense management across groups.
+
+## 🚀 **Ready for Production Launch!**
+
+**Status**: ✅ MVP Feature-Complete | All CI/CD Passing | 1-2 Weeks to Beta Launch
+
+**Quick Deploy**:
+- 📖 [**QUICK_DEPLOY.md**](./QUICK_DEPLOY.md) - Get to production in 1 day
+- 📋 [**SERVICE_SETUP_CHECKLIST.md**](./SERVICE_SETUP_CHECKLIST.md) - Track your setup progress
+- 📚 [**DEPLOYMENT_GUIDE.md**](./DEPLOYMENT_GUIDE.md) - Complete deployment guide
+- 🎯 [**NEXT_STEPS.md**](./NEXT_STEPS.md) - Week-by-week roadmap to launch
 
 ## 📋 Table of Contents
 
