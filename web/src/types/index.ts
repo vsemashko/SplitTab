@@ -87,24 +87,79 @@ export type ExpenseCategory =
 export interface Settlement {
   id: string;
   groupId: string;
-  fromUserId: string;
-  toUserId: string;
+  payerId: string;
+  payeeId: string;
   amount: number;
-  currency: string;
+  currency?: string;
   status: SettlementStatus;
   paymentMethod?: PaymentMethod;
+  referenceNumber?: string;
+  proofOfPaymentUrl?: string;
   notes?: string;
   settledAt?: string;
   createdAt: string;
   updatedAt: string;
-  fromUser?: User;
-  toUser?: User;
+  payer?: User;
+  payee?: User;
   group?: Group;
 }
 
-export type SettlementStatus = 'pending' | 'completed' | 'cancelled';
+export type SettlementStatus = 'pending' | 'confirmed' | 'cancelled';
 
-export type PaymentMethod = 'cash' | 'bank_transfer' | 'paypal' | 'venmo' | 'other';
+export type PaymentMethod =
+  | 'cash'
+  | 'credit_card'
+  | 'debit_card'
+  | 'bank_transfer'
+  | 'venmo'
+  | 'paypal'
+  | 'zelle'
+  | 'apple_pay'
+  | 'google_pay'
+  | 'other';
+
+export interface BalanceSummary {
+  totalOwed: number;
+  totalOwing: number;
+  netBalance: number;
+  currency: string;
+  byGroup: GroupBalance[];
+  byPerson: PersonBalance[];
+}
+
+export interface GroupBalance {
+  groupId: string;
+  groupName: string;
+  netBalance: number;
+  currency: string;
+  members: PersonBalance[];
+}
+
+export interface PersonBalance {
+  userId: string;
+  userName: string;
+  userProfilePicture?: string;
+  balance: number;
+  currency: string;
+}
+
+export interface SettlementSuggestion {
+  payerId: string;
+  payerName: string;
+  payeeId: string;
+  payeeName: string;
+  amount: number;
+  currency: string;
+}
+
+export interface SettlementStats {
+  totalSettled: number;
+  pendingSettlements: number;
+  completedSettlements: number;
+  cancelledSettlements: number;
+  averageSettlementAmount: number;
+  currency: string;
+}
 
 export interface Balance {
   userId: string;
@@ -224,13 +279,22 @@ export interface ExpenseUpdate {
 }
 
 export interface SettlementCreate {
-  groupId: string;
-  fromUserId: string;
-  toUserId: string;
+  groupId?: string;
+  payerId: string;
+  payeeId: string;
   amount: number;
-  currency: string;
   paymentMethod?: PaymentMethod;
+  referenceNumber?: string;
   notes?: string;
+  settledAt?: string;
+}
+
+export interface SettlementUpdate {
+  amount?: number;
+  paymentMethod?: PaymentMethod;
+  referenceNumber?: string;
+  notes?: string;
+  status?: SettlementStatus;
 }
 
 export interface UserProfileUpdate {

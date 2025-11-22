@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct RegisterView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
@@ -15,6 +16,7 @@ struct RegisterView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
+    @State private var acceptTerms = false
 
     var body: some View {
         ScrollView {
@@ -74,6 +76,21 @@ struct RegisterView: View {
                         .background(Color.white.opacity(0.9))
                         .cornerRadius(10)
 
+                    // Terms and conditions
+                    HStack(alignment: .top, spacing: 10) {
+                        Toggle(isOn: $acceptTerms) {
+                            EmptyView()
+                        }
+                        .toggleStyle(CheckboxToggleStyle())
+                        .labelsHidden()
+
+                        Text("I agree to the Terms & Conditions and Privacy Policy")
+                            .font(.footnote)
+                            .foregroundColor(.white.opacity(0.9))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal)
+
                     // Register button
                     Button(action: register) {
                         if authViewModel.isLoading {
@@ -99,12 +116,53 @@ struct RegisterView: View {
                             .padding(.horizontal)
                     }
 
-                    // Terms and conditions
-                    Text("By signing up, you agree to our Terms & Conditions and Privacy Policy")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                    // Divider
+                    HStack {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.5))
+                            .frame(height: 1)
+
+                        Text("OR")
+                            .foregroundColor(.white.opacity(0.9))
+                            .font(.caption)
+
+                        Rectangle()
+                            .fill(Color.white.opacity(0.5))
+                            .frame(height: 1)
+                    }
+                    .padding(.vertical)
+
+                    // OAuth buttons
+                    VStack(spacing: 12) {
+                        // Google Sign Up
+                        Button(action: signUpWithGoogle) {
+                            HStack {
+                                Image(systemName: "globe")
+                                Text("Sign up with Google")
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(10)
+                        }
+                        .disabled(authViewModel.isLoading)
+
+                        // Apple Sign Up
+                        SignInWithAppleButton(
+                            .signUp,
+                            onRequest: { request in
+                                request.requestedScopes = [.fullName, .email]
+                            },
+                            onCompletion: { result in
+                                handleAppleSignUp(result)
+                            }
+                        )
+                        .signInWithAppleButtonStyle(.white)
+                        .frame(height: 50)
+                        .cornerRadius(10)
+                    }
 
                     // Login link
                     HStack {
@@ -133,13 +191,63 @@ struct RegisterView: View {
         }
     }
 
+    private func signUpWithGoogle() {
+        // Google Sign-Up implementation
+        // In production, integrate Google Sign-In SDK
+        Task {
+            authViewModel.errorMessage = "Google Sign-Up coming soon"
+        }
+    }
+
+    private func handleAppleSignUp(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                // Get the user identifier token
+                guard let identityToken = appleIDCredential.identityToken,
+                      let tokenString = String(data: identityToken, encoding: .utf8) else {
+                    authViewModel.errorMessage = "Failed to get Apple ID token"
+                    return
+                }
+
+                // Pass the token to the view model
+                Task {
+                    await authViewModel.loginWithApple(token: tokenString)
+                }
+            }
+
+        case .failure(let error):
+            // Handle error
+            if let authError = error as? ASAuthorizationError {
+                switch authError.code {
+                case .canceled:
+                    // User canceled the sign-up flow
+                    break
+                case .failed:
+                    authViewModel.errorMessage = "Apple Sign-Up failed"
+                case .invalidResponse:
+                    authViewModel.errorMessage = "Invalid response from Apple"
+                case .notHandled:
+                    authViewModel.errorMessage = "Apple Sign-Up not handled"
+                case .unknown:
+                    authViewModel.errorMessage = "Unknown error occurred"
+                @unknown default:
+                    authViewModel.errorMessage = "Apple Sign-Up error"
+                }
+            } else {
+                authViewModel.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
     // MARK: - Validation
 
     private var isFormValid: Bool {
         Validators.isValidName(name) &&
         Validators.isValidEmail(email) &&
         Validators.isValidPassword(password) &&
-        password == confirmPassword
+        password == confirmPassword &&
+        acceptTerms
     }
 }
 

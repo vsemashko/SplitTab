@@ -13,6 +13,8 @@ interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,6 +109,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      // In production, this would integrate with Google OAuth
+      // For now, we'll redirect to the OAuth endpoint
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+      if (!clientId) {
+        throw new Error('Google OAuth not configured');
+      }
+
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email profile',
+        access_type: 'offline',
+        prompt: 'consent',
+      })}`;
+
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Google login failed:', error);
+      throw error;
+    }
+  };
+
+  const loginWithApple = async () => {
+    try {
+      // In production, this would integrate with Apple Sign-In
+      // For now, we'll redirect to the OAuth endpoint
+      const redirectUri = `${window.location.origin}/auth/callback/apple`;
+      const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
+
+      if (!clientId) {
+        throw new Error('Apple OAuth not configured');
+      }
+
+      const authUrl = `https://appleid.apple.com/auth/authorize?${new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code id_token',
+        response_mode: 'form_post',
+        scope: 'name email',
+      })}`;
+
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Apple login failed:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isLoading,
@@ -115,6 +170,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshUser,
+    loginWithGoogle,
+    loginWithApple,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

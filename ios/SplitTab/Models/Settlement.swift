@@ -10,44 +10,48 @@ import Foundation
 struct Settlement: Codable, Identifiable, Hashable {
     let id: String
     var groupId: String
-    var fromUserId: String
-    var toUserId: String
+    var payerId: String
+    var payeeId: String
     var amount: Double
-    var currency: String
+    var currency: String?
     var status: SettlementStatus
     var paymentMethod: PaymentMethod?
+    var referenceNumber: String?
+    var proofOfPaymentUrl: String?
     var notes: String?
     var settledAt: Date?
     var createdAt: Date
     var updatedAt: Date
 
     // Relationships
-    var fromUser: User?
-    var toUser: User?
+    var payer: User?
+    var payee: User?
     var group: Group?
 
     enum CodingKeys: String, CodingKey {
         case id
-        case groupId = "group_id"
-        case fromUserId = "from_user_id"
-        case toUserId = "to_user_id"
+        case groupId
+        case payerId
+        case payeeId
         case amount
         case currency
         case status
-        case paymentMethod = "payment_method"
+        case paymentMethod
+        case referenceNumber
+        case proofOfPaymentUrl
         case notes
-        case settledAt = "settled_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case fromUser = "from_user"
-        case toUser = "to_user"
+        case settledAt
+        case createdAt
+        case updatedAt
+        case payer
+        case payee
         case group
     }
 }
 
 enum SettlementStatus: String, Codable, CaseIterable {
     case pending
-    case completed
+    case confirmed
     case cancelled
 
     var displayName: String {
@@ -58,7 +62,7 @@ enum SettlementStatus: String, Codable, CaseIterable {
         switch self {
         case .pending:
             return "orange"
-        case .completed:
+        case .confirmed:
             return "green"
         case .cancelled:
             return "gray"
@@ -68,55 +72,63 @@ enum SettlementStatus: String, Codable, CaseIterable {
 
 enum PaymentMethod: String, Codable, CaseIterable {
     case cash
+    case creditCard = "credit_card"
+    case debitCard = "debit_card"
     case bankTransfer = "bank_transfer"
-    case paypal
     case venmo
+    case paypal
+    case zelle
+    case applePay = "apple_pay"
+    case googlePay = "google_pay"
     case other
 
     var displayName: String {
         switch self {
         case .cash:
             return "Cash"
+        case .creditCard:
+            return "Credit Card"
+        case .debitCard:
+            return "Debit Card"
         case .bankTransfer:
             return "Bank Transfer"
-        case .paypal:
-            return "PayPal"
         case .venmo:
             return "Venmo"
+        case .paypal:
+            return "PayPal"
+        case .zelle:
+            return "Zelle"
+        case .applePay:
+            return "Apple Pay"
+        case .googlePay:
+            return "Google Pay"
         case .other:
             return "Other"
         }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case cash
-        case bankTransfer = "bank_transfer"
-        case paypal
-        case venmo
-        case other
     }
 }
 
 // MARK: - Settlement Creation
 
 struct SettlementCreate: Codable {
-    var groupId: String
-    var fromUserId: String
-    var toUserId: String
+    var groupId: String?
+    var payerId: String
+    var payeeId: String
     var amount: Double
-    var currency: String
     var paymentMethod: PaymentMethod?
+    var referenceNumber: String?
     var notes: String?
+    var settledAt: String?
+}
 
-    enum CodingKeys: String, CodingKey {
-        case groupId = "group_id"
-        case fromUserId = "from_user_id"
-        case toUserId = "to_user_id"
-        case amount
-        case currency
-        case paymentMethod = "payment_method"
-        case notes
-    }
+// MARK: - Settlement Update
+
+struct SettlementUpdate: Codable {
+    var amount: Double?
+    var paymentMethod: PaymentMethod?
+    var referenceNumber: String?
+    var notes: String?
+    var status: SettlementStatus?
 }
 
 // MARK: - Balance
@@ -146,4 +158,57 @@ struct Balance: Codable, Identifiable, Hashable {
         case currency
         case otherUser = "other_user"
     }
+}
+
+// MARK: - Balance Summary
+
+struct BalanceSummary: Codable {
+    let totalOwed: Double
+    let totalOwing: Double
+    let netBalance: Double
+    let currency: String
+    let byGroup: [GroupBalance]
+    let byPerson: [PersonBalance]
+}
+
+// MARK: - Group Balance
+
+struct GroupBalance: Codable {
+    let groupId: String
+    let groupName: String
+    let netBalance: Double
+    let currency: String
+    let members: [PersonBalance]
+}
+
+// MARK: - Person Balance
+
+struct PersonBalance: Codable {
+    let userId: String
+    let userName: String
+    let userProfilePicture: String?
+    let balance: Double
+    let currency: String
+}
+
+// MARK: - Settlement Suggestion
+
+struct SettlementSuggestion: Codable {
+    let payerId: String
+    let payerName: String
+    let payeeId: String
+    let payeeName: String
+    let amount: Double
+    let currency: String
+}
+
+// MARK: - Settlement Stats
+
+struct SettlementStats: Codable {
+    let totalSettled: Double
+    let pendingSettlements: Int
+    let completedSettlements: Int
+    let cancelledSettlements: Int
+    let averageSettlementAmount: Double
+    let currency: String
 }

@@ -70,13 +70,23 @@ extension APIEndpoint {
     // MARK: - Expenses
 
     static let expenses = APIEndpoint(path: "expenses")
-    static func expense(_ id: String) -> APIEndpoint {
+    static let createExpense = APIEndpoint(path: "expenses")
+    static func expense(id: String) -> APIEndpoint {
         APIEndpoint(path: "expenses/\(id)")
     }
-    static func groupExpenses(_ groupId: String) -> APIEndpoint {
+    static func updateExpense(id: String) -> APIEndpoint {
+        APIEndpoint(path: "expenses/\(id)")
+    }
+    static func deleteExpense(id: String) -> APIEndpoint {
+        APIEndpoint(path: "expenses/\(id)")
+    }
+    static func groupExpenses(groupId: String) -> APIEndpoint {
         APIEndpoint(path: "groups/\(groupId)/expenses")
     }
-    static func uploadReceipt(_ expenseId: String) -> APIEndpoint {
+    static func groupMembers(groupId: String) -> APIEndpoint {
+        APIEndpoint(path: "groups/\(groupId)/members")
+    }
+    static func uploadReceipt(expenseId: String) -> APIEndpoint {
         APIEndpoint(path: "expenses/\(expenseId)/receipt")
     }
 
