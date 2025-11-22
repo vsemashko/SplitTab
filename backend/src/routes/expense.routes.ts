@@ -28,20 +28,22 @@ router.post(
 /**
  * @route   POST /api/v1/expenses/calculate-split/equal
  * @desc    Calculate equal split for expense
- * @access  Public (utility endpoint)
+ * @access  Private
  */
 router.post(
   '/calculate-split/equal',
+  authenticate,
   expenseController.calculateEqualSplit.bind(expenseController)
 );
 
 /**
  * @route   POST /api/v1/expenses/calculate-split/percentage
  * @desc    Calculate percentage split for expense
- * @access  Public (utility endpoint)
+ * @access  Private
  */
 router.post(
   '/calculate-split/percentage',
+  authenticate,
   expenseController.calculatePercentageSplit.bind(expenseController)
 );
 

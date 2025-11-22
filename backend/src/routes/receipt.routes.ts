@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { receiptController } from '../controllers/receipt.controller';
 import { authenticate } from '../middleware/auth';
+import { uploadLimiter } from '../middleware/rateLimit';
 import { upload } from '../utils/fileUpload';
 
 const router = Router();
@@ -13,6 +14,7 @@ const router = Router();
 router.post(
   '/upload',
   authenticate,
+  uploadLimiter,
   upload.single('receipt'),
   receiptController.uploadReceipt.bind(receiptController)
 );

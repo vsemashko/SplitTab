@@ -138,16 +138,12 @@ export class AuthController {
     try {
       const { email } = req.body;
 
-      const result = await authService.requestPasswordReset(email);
+      await authService.requestPasswordReset(email);
 
-      // In production, the token would be sent via email
-      // For development/testing, we return it in the response
-      const isDevelopment = process.env.NODE_ENV === 'development';
-
+      // Token sent via email - not returned in response for security
       res.json({
         success: true,
         message: 'If a user with this email exists, a password reset link has been sent',
-        ...(isDevelopment && { resetToken: result.resetToken }),
       });
     } catch (error) {
       next(error);
@@ -219,14 +215,11 @@ export class AuthController {
         throw new ApiError(401, 'Not authenticated');
       }
 
-      const result = await authService.sendEmailVerification(req.user.userId);
-
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      await authService.sendEmailVerification(req.user.userId);
 
       res.json({
         success: true,
         message: 'Verification email sent',
-        ...(isDevelopment && { verificationToken: result.verificationToken }),
       });
     } catch (error) {
       next(error);

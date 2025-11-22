@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { authLimiter } from '../middleware/rateLimit';
 import { createUserSchema, loginSchema, updatePasswordSchema } from '../types/validation';
 
 const router = Router();
@@ -11,14 +12,24 @@ const router = Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/register', validate(createUserSchema), authController.register.bind(authController));
+router.post(
+  '/register',
+  authLimiter,
+  validate(createUserSchema),
+  authController.register.bind(authController)
+);
 
 /**
  * @route   POST /api/v1/auth/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', validate(loginSchema), authController.login.bind(authController));
+router.post(
+  '/login',
+  authLimiter,
+  validate(loginSchema),
+  authController.login.bind(authController)
+);
 
 /**
  * @route   POST /api/v1/auth/logout
@@ -46,14 +57,18 @@ router.get('/me', authenticate, authController.getCurrentUser.bind(authControlle
  * @desc    Request password reset
  * @access  Public
  */
-router.post('/password/reset-request', authController.requestPasswordReset.bind(authController));
+router.post(
+  '/password/reset-request',
+  authLimiter,
+  authController.requestPasswordReset.bind(authController)
+);
 
 /**
  * @route   POST /api/v1/auth/password/reset
  * @desc    Reset password
  * @access  Public
  */
-router.post('/password/reset', authController.resetPassword.bind(authController));
+router.post('/password/reset', authLimiter, authController.resetPassword.bind(authController));
 
 /**
  * @route   POST /api/v1/auth/password/change

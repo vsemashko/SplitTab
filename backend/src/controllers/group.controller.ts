@@ -147,9 +147,15 @@ export class GroupController {
         throw new ApiError(400, 'User ID is required');
       }
 
+      // Verify requesting user is admin
+      const isAdmin = await groupService.isAdmin(id, req.user.userId);
+      if (!isAdmin) {
+        throw new ApiError(403, 'Only group admins can add members');
+      }
+
       const member = await groupService.addMember(id, { userId, role });
 
-      logger.info(`Member added to group ${id}: ${userId}`);
+      logger.info(`Member added to group ${id}: ${userId} by ${req.user.email}`);
 
       res.status(201).json({
         success: true,
