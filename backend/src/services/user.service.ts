@@ -56,6 +56,7 @@ export class UserService {
     });
 
     // Return user without password hash
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -84,6 +85,7 @@ export class UserService {
       throw new NotFoundError('User not found');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -121,6 +123,7 @@ export class UserService {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
@@ -368,6 +371,7 @@ export class UserService {
     });
 
     return users.map((user) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash: _, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });

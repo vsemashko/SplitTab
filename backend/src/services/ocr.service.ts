@@ -225,7 +225,7 @@ export class OCRService {
     }
 
     // Extract date
-    const dateRegex = /(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/;
+    const dateRegex = /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/;
     const dateMatch = text.match(dateRegex);
     if (dateMatch) {
       try {

@@ -76,6 +76,7 @@ export class AuthService {
     await this.createSession(user.id, tokens.refreshToken);
 
     // Return user without password hash
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
 
     return {
@@ -367,6 +368,7 @@ export class AuthService {
     // Create session
     await this.createSession(user.id, tokens.refreshToken);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
 
     return {
