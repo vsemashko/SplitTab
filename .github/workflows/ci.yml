@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload lint results
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lint-results
           path: backend/eslint-report.json
@@ -146,7 +146,7 @@ jobs:
 
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -188,7 +188,7 @@ jobs:
           test -f dist/workers/ocr.worker.js
 
       - name: Archive build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: backend/dist/
