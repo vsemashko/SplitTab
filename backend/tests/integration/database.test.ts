@@ -267,8 +267,8 @@ describe('Database Integration Tests', () => {
       expect(expense.amount).toBe(100);
       expect(expense.participants).toHaveLength(2);
 
-      const totalPaid = expense.participants.reduce((sum, p) => sum + p.paidAmount, 0);
-      const totalOwed = expense.participants.reduce((sum, p) => sum + p.owedAmount, 0);
+      const totalPaid = expense.participants.reduce((sum, p) => sum + Number(p.paidAmount), 0);
+      const totalOwed = expense.participants.reduce((sum, p) => sum + Number(p.owedAmount), 0);
 
       expect(totalPaid).toBe(100);
       expect(totalOwed).toBe(100);

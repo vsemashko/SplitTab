@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
+import { userService } from '../services/user.service';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 
@@ -118,7 +119,6 @@ export class AuthController {
         throw new ApiError(401, 'Not authenticated');
       }
 
-      const { userService } = require('../services/user.service');
       const user = await userService.getUserById(req.user.userId);
 
       res.json({
@@ -191,7 +191,6 @@ export class AuthController {
         throw new ApiError(400, 'Current password and new password required');
       }
 
-      const { userService } = require('../services/user.service');
       await userService.updatePassword(req.user.userId, currentPassword, newPassword);
 
       logger.info(`Password changed for user: ${req.user.email}`);

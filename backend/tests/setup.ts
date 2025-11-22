@@ -14,7 +14,9 @@ beforeAll(async () => {
 
   // Ensure we're using test database
   if (!process.env.DATABASE_URL?.includes('test')) {
-    console.error('❌ DATABASE_URL must contain "test" to prevent accidental test runs on production database');
+    console.error(
+      '❌ DATABASE_URL must contain "test" to prevent accidental test runs on production database'
+    );
     process.exit(1);
   }
 

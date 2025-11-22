@@ -295,11 +295,12 @@ export class AnalyticsController {
           case 'day':
             key = date.toISOString().split('T')[0];
             break;
-          case 'week':
+          case 'week': {
             const weekStart = new Date(date);
             weekStart.setDate(date.getDate() - date.getDay());
             key = weekStart.toISOString().split('T')[0];
             break;
+          }
           case 'year':
             key = date.getFullYear().toString();
             break;
