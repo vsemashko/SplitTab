@@ -14,7 +14,7 @@ async function startServer() {
   try {
     // Log feature flags status
     logger.info('🎯 Starting SplitTab Backend...');
-    logFeatureFlags();
+    logFeatureFlags(logger.info.bind(logger));
 
     // Validate feature configuration
     const validation = validateFeatureConfiguration();
