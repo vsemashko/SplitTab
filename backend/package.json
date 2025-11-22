@@ -24,7 +24,7 @@
     "studio": "prisma studio",
     "prepare": "cd .. && husky backend/.husky || true",
     "pre-commit": "lint-staged",
-    "pre-push": "npm run typecheck && npm run build"
+    "pre-push": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build"
   },
   "lint-staged": {
     "*.ts": [
