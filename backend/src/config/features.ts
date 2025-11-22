@@ -167,23 +167,25 @@ export const logFeatureFlags = (logFn: (message: string) => void = console.log):
   // eslint-disable-next-line no-console
   logFn('🎯 Feature Flags Configuration:');
   // eslint-disable-next-line no-console
-  logFn('  OCR Processing: ' + (features.ocr.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  OCR Processing: ${features.ocr.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Email Notifications: ' + (features.email.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Email Notifications: ${features.email.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Real-time Updates: ' + (features.realtime.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Real-time Updates: ${features.realtime.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Background Jobs: ' + (features.backgroundJobs.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Background Jobs: ${features.backgroundJobs.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Push Notifications: ' + (features.pushNotifications.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(
+    `  Push Notifications: ${features.pushNotifications.enabled ? '✅ Enabled' : '❌ Disabled'}`
+  );
   // eslint-disable-next-line no-console
-  logFn('  File Storage: ' + (features.fileStorage.provider === 's3' ? '☁️  AWS S3' : '📁 Local'));
+  logFn(`  File Storage: ${features.fileStorage.provider === 's3' ? '☁️  AWS S3' : '📁 Local'}`);
   // eslint-disable-next-line no-console
-  logFn('  Google OAuth: ' + (features.oauth.google.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Google OAuth: ${features.oauth.google.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Apple Sign-In: ' + (features.oauth.apple.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Apple Sign-In: ${features.oauth.apple.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn('  Sentry Monitoring: ' + (features.monitoring.sentry.enabled ? '✅ Enabled' : '❌ Disabled'));
+  logFn(`  Sentry Monitoring: ${features.monitoring.sentry.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
   logFn('');
 };
