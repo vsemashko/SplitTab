@@ -9,7 +9,6 @@ describe('User API Integration Tests', () => {
   let authToken: string;
   let userId: string;
   let otherUserId: string;
-  let otherAuthToken: string;
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -28,7 +27,6 @@ describe('User API Integration Tests', () => {
       password: 'SecurePass123',
       name: 'Other User',
     });
-    otherAuthToken = user2.tokens.accessToken;
     otherUserId = user2.user.id;
   });
 

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
 import { ApiError } from '../middleware/errorHandler';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 export class AuthController {
   /**

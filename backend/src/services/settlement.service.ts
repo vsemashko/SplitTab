@@ -155,9 +155,9 @@ export class SettlementService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -283,6 +283,9 @@ export class SettlementService {
     }
 
     // Check if user is involved in the settlement or is a group admin
+    if (!settlement.group) {
+      throw new ApiError(400, 'Settlement is not associated with a group');
+    }
     const member = settlement.group.members.find((m) => m.userId === userId);
     if (!member) {
       throw new ApiError(403, 'You must be a member of the group');
@@ -406,6 +409,9 @@ export class SettlementService {
     }
 
     // Check if user is admin or involved in settlement
+    if (!settlement.group) {
+      throw new ApiError(400, 'Settlement is not associated with a group');
+    }
     const member = settlement.group.members.find((m) => m.userId === userId);
     if (!member) {
       throw new ApiError(403, 'You must be a member of the group');
@@ -452,9 +458,9 @@ export class SettlementService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -502,7 +508,7 @@ export class SettlementService {
       for (const expense of expenses) {
         const participant = expense.participants.find((p) => p.userId === member.userId);
         if (participant) {
-          balance += participant.paidAmount - participant.owedAmount;
+          balance += Number(participant.paidAmount) - Number(participant.owedAmount);
         }
       }
 
@@ -516,7 +522,7 @@ export class SettlementService {
         },
       });
 
-      balance -= settlementsAsPayer.reduce((sum, s) => sum + s.amount, 0);
+      balance -= settlementsAsPayer.reduce((sum, s) => sum + Number(s.amount), 0);
 
       // Add confirmed settlements where user is payee
       const settlementsAsPayee = await prisma.settlement.findMany({
@@ -528,7 +534,7 @@ export class SettlementService {
         },
       });
 
-      balance += settlementsAsPayee.reduce((sum, s) => sum + s.amount, 0);
+      balance += settlementsAsPayee.reduce((sum, s) => sum + Number(s.amount), 0);
 
       balances.set(member.userId, {
         name: member.user.name,

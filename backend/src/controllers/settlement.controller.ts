@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { settlementService } from '../services/settlement.service';
 import { ApiError } from '../middleware/errorHandler';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 export class SettlementController {
   /**

@@ -115,7 +115,7 @@ export const createExpenseSchema = z
     notes: z.string().max(1000).optional(),
     date: z.coerce.date(),
     splitMethod: splitMethodSchema.optional(),
-    splitData: z.record(z.any()).optional(),
+    splitData: z.record(z.string(), z.any()).optional(),
     participants: z.array(expenseParticipantSchema).min(1),
   })
   .refine(
@@ -147,7 +147,7 @@ export const updateExpenseSchema = z.object({
   notes: z.string().max(1000).optional(),
   date: z.coerce.date().optional(),
   splitMethod: splitMethodSchema.optional(),
-  splitData: z.record(z.any()).optional(),
+  splitData: z.record(z.string(), z.any()).optional(),
   participants: z.array(expenseParticipantSchema).min(1).optional(),
 });
 
@@ -179,6 +179,12 @@ export const createSettlementSchema = z
     message: 'Payer and payee must be different',
     path: ['payeeId'],
   });
+
+export const updateSettlementSchema = z.object({
+  amount: z.number().positive().max(999999.99).optional(),
+  notes: z.string().max(500).optional(),
+  status: z.enum(['pending', 'confirmed', 'cancelled']).optional(),
+});
 
 export const confirmSettlementSchema = z.object({
   confirmed: z.boolean(),
@@ -218,6 +224,7 @@ export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
 export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
 
 export type CreateSettlementInput = z.infer<typeof createSettlementSchema>;
+export type UpdateSettlementInput = z.infer<typeof updateSettlementSchema>;
 export type ConfirmSettlementInput = z.infer<typeof confirmSettlementSchema>;
 
 export type PaginationQuery = z.infer<typeof paginationSchema>;

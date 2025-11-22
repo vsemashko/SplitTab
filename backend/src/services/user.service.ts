@@ -67,7 +67,7 @@ export class UserService {
     const user = await prisma.user.findUnique({
       where: { id, deletedAt: null },
       include: {
-        groups: {
+        groupMemberships: {
           include: {
             group: true,
           },
@@ -317,7 +317,7 @@ export class UserService {
       const userParticipant = expense.participants.find((p) => p.userId === userId);
       if (userParticipant) {
         // What user paid minus what they owe
-        balance += userParticipant.paidAmount - userParticipant.owedAmount;
+        balance += Number(userParticipant.paidAmount) - Number(userParticipant.owedAmount);
       }
     }
 
@@ -332,7 +332,7 @@ export class UserService {
     });
 
     for (const settlement of settlementsAsPayer) {
-      balance -= settlement.amount;
+      balance -= Number(settlement.amount);
     }
 
     // Add confirmed settlements where user is payee
@@ -346,7 +346,7 @@ export class UserService {
     });
 
     for (const settlement of settlementsAsPayee) {
-      balance += settlement.amount;
+      balance += Number(settlement.amount);
     }
 
     return balance;

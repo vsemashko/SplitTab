@@ -21,7 +21,7 @@ declare global {
  * Authentication middleware
  * Verifies JWT token and attaches user to request
  */
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     // Extract token from Authorization header
     const token = extractTokenFromHeader(req.headers.authorization);
@@ -63,7 +63,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
  * Optional authentication middleware
  * Attaches user to request if token is provided, but doesn't require it
  */
-export const optionalAuthenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuthenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
 
@@ -97,7 +97,7 @@ export const optionalAuthenticate = async (req: Request, res: Response, next: Ne
  * Require email verification middleware
  * Must be used after authenticate middleware
  */
-export const requireEmailVerification = async (req: Request, res: Response, next: NextFunction) => {
+export const requireEmailVerification = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
       throw new ApiError(401, 'Authentication required');

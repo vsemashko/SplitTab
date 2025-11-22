@@ -1,7 +1,10 @@
-import { PrismaClient, Group, GroupMember, GroupType } from '@prisma/client';
+import { PrismaClient, Group, GroupMember } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
+
+// Define group type since it's not an enum in Prisma schema
+export type GroupType = string;
 
 export interface CreateGroupData {
   name: string;
@@ -45,7 +48,7 @@ export class GroupService {
         description: data.description,
         groupType: data.groupType || 'other',
         defaultCurrency: data.defaultCurrency || 'USD',
-        createdById: data.createdById,
+        createdBy: data.createdById,
         members: {
           create: {
             userId: data.createdById,
@@ -102,7 +105,7 @@ export class GroupService {
             },
           },
         },
-        createdBy: {
+        creator: {
           select: {
             id: true,
             name: true,
@@ -178,9 +181,9 @@ export class GroupService {
     // Check if user is admin
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId: id,
+          userId,
         },
       },
     });
@@ -240,9 +243,9 @@ export class GroupService {
     // Check if user is already a member
     const existingMember = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId: data.userId,
+        groupId_userId: {
           groupId,
+          userId: data.userId,
         },
       },
     });
@@ -289,9 +292,9 @@ export class GroupService {
     // Check if requesting user is admin or removing themselves
     const requestingMember = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId: requestingUserId,
+        groupId_userId: {
           groupId,
+          userId: requestingUserId,
         },
       },
     });
@@ -310,9 +313,9 @@ export class GroupService {
     // Check if member exists
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -338,9 +341,9 @@ export class GroupService {
     // Remove member
     await prisma.groupMember.delete({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -358,9 +361,9 @@ export class GroupService {
     // Check if requesting user is admin
     const requestingMember = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId: requestingUserId,
+        groupId_userId: {
           groupId,
+          userId: requestingUserId,
         },
       },
     });
@@ -372,9 +375,9 @@ export class GroupService {
     // Check if member exists
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -400,9 +403,9 @@ export class GroupService {
     // Update role
     const updatedMember = await prisma.groupMember.update({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
       data: {
@@ -439,9 +442,9 @@ export class GroupService {
     // Check if user is admin
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId: id,
+          userId,
         },
       },
     });
@@ -466,9 +469,9 @@ export class GroupService {
   async isMember(groupId: string, userId: string): Promise<boolean> {
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -482,9 +485,9 @@ export class GroupService {
   async isAdmin(groupId: string, userId: string): Promise<boolean> {
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -523,11 +526,11 @@ export class GroupService {
     ]);
 
     const totalExpenses = expenses.length;
-    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
 
     const settledAmount = settlements
       .filter((s) => s.status === 'confirmed')
-      .reduce((sum, settlement) => sum + settlement.amount, 0);
+      .reduce((sum, settlement) => sum + Number(settlement.amount), 0);
 
     const pendingSettlements = settlements.filter((s) => s.status === 'pending').length;
 

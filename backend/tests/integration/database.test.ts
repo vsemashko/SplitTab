@@ -145,7 +145,7 @@ describe('Database Integration Tests', () => {
         data: {
           name: 'Test Group',
           groupType: 'friends',
-          createdById: testUser.id,
+          createdBy: testUser.id,
         },
       });
 
@@ -159,7 +159,7 @@ describe('Database Integration Tests', () => {
         data: {
           name: 'Group With Members',
           groupType: 'trip',
-          createdById: testUser.id,
+          createdBy: testUser.id,
           members: {
             create: {
               userId: testUser.id,
@@ -181,7 +181,7 @@ describe('Database Integration Tests', () => {
         data: {
           name: 'Cascade Test',
           groupType: 'home',
-          createdById: testUser.id,
+          createdBy: testUser.id,
           members: {
             create: {
               userId: testUser.id,
@@ -229,7 +229,7 @@ describe('Database Integration Tests', () => {
         data: {
           name: 'Expense Test Group',
           groupType: 'friends',
-          createdById: testUser1.id,
+          createdBy: testUser1.id,
         },
       });
     });
@@ -383,7 +383,7 @@ describe('Database Integration Tests', () => {
         data: {
           name: 'Settlement Test Group',
           groupType: 'friends',
-          createdById: testUser1.id,
+          createdBy: testUser1.id,
         },
       });
     });
@@ -497,7 +497,7 @@ describe('Database Integration Tests', () => {
           data: {
             name: 'TX Success Group',
             groupType: 'friends',
-            createdById: user.id,
+            createdBy: user.id,
           },
         });
 

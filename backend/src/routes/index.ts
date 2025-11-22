@@ -36,7 +36,7 @@ router.get('/groups/:groupId/settlements/suggestions', authenticate, settlementC
 router.get('/expenses/:expenseId/receipts', authenticate, receiptController.getExpenseReceipts.bind(receiptController));
 
 // Health check
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({
     success: true,
     message: 'API is running',

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { groupService } from '../services/group.service';
 import { ApiError } from '../middleware/errorHandler';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 export class GroupController {
   /**

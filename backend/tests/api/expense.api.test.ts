@@ -9,7 +9,6 @@ const prisma = new PrismaClient();
 describe('Expense API Integration Tests', () => {
   let authToken: string;
   let userId: string;
-  let member2Token: string;
   let member2Id: string;
   let nonMemberToken: string;
   let nonMemberId: string;
@@ -33,7 +32,6 @@ describe('Expense API Integration Tests', () => {
       password: 'SecurePass123',
       name: 'Expense User 2',
     });
-    member2Token = user2.tokens.accessToken;
     member2Id = user2.user.id;
 
     const user3 = await authService.register({

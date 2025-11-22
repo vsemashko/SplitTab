@@ -1,7 +1,42 @@
-import { PrismaClient, Expense, ExpenseCategory } from '@prisma/client';
+import { PrismaClient, Expense, Prisma } from '@prisma/client';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 
 const prisma = new PrismaClient();
+
+// Define expense category type since it's not an enum in Prisma schema
+export type ExpenseCategory = string;
+
+// Define type for expense with relations
+export type ExpenseWithRelations = Prisma.ExpenseGetPayload<{
+  include: {
+    participants: {
+      include: {
+        user: {
+          select: {
+            id: true;
+            name: true;
+            email: true;
+            profilePictureUrl: true;
+          };
+        };
+      };
+    };
+    paidBy: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+        profilePictureUrl: true;
+      };
+    };
+    group: {
+      select: {
+        id: true;
+        name: true;
+      };
+    };
+  };
+}>;
 
 export interface ExpenseParticipantData {
   userId: string;
@@ -127,7 +162,7 @@ export class ExpenseService {
   /**
    * Get expense by ID
    */
-  async getExpenseById(id: string): Promise<Expense> {
+  async getExpenseById(id: string): Promise<ExpenseWithRelations> {
     const expense = await prisma.expense.findUnique({
       where: { id, deletedAt: null },
       include: {
@@ -184,9 +219,9 @@ export class ExpenseService {
     // Verify user is member of group
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -330,6 +365,9 @@ export class ExpenseService {
     }
 
     // Check if user is admin or the one who created the expense
+    if (!expense.group) {
+      throw new ApiError(400, 'Expense is not associated with a group');
+    }
     const member = expense.group.members.find((m) => m.userId === userId);
     if (!member) {
       throw new ApiError(403, 'You must be a member of the group');
@@ -342,7 +380,7 @@ export class ExpenseService {
 
     // If participants are being updated, validate amounts
     if (data.participants) {
-      const amount = data.amount || expense.amount;
+      const amount = data.amount || Number(expense.amount);
       this.validateParticipantAmounts(amount, data.participants);
 
       // Delete existing participants and create new ones
@@ -425,6 +463,9 @@ export class ExpenseService {
     }
 
     // Check if user is admin or the one who created the expense
+    if (!expense.group) {
+      throw new ApiError(400, 'Expense is not associated with a group');
+    }
     const member = expense.group.members.find((m) => m.userId === userId);
     if (!member) {
       throw new ApiError(403, 'You must be a member of the group');
@@ -516,9 +557,9 @@ export class ExpenseService {
     // Verify user is member
     const member = await prisma.groupMember.findUnique({
       where: {
-        userId_groupId: {
-          userId,
+        groupId_userId: {
           groupId,
+          userId,
         },
       },
     });
@@ -541,7 +582,7 @@ export class ExpenseService {
     });
 
     const totalExpenses = expenses.length;
-    const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
     // By category
     const categoryMap = new Map<ExpenseCategory, { count: number; total: number }>();
@@ -549,7 +590,7 @@ export class ExpenseService {
       const existing = categoryMap.get(expense.category) || { count: 0, total: 0 };
       categoryMap.set(expense.category, {
         count: existing.count + 1,
-        total: existing.total + expense.amount,
+        total: existing.total + Number(expense.amount),
       });
     });
 
@@ -566,7 +607,7 @@ export class ExpenseService {
       const existing = monthMap.get(monthKey) || { count: 0, total: 0 };
       monthMap.set(monthKey, {
         count: existing.count + 1,
-        total: existing.total + expense.amount,
+        total: existing.total + Number(expense.amount),
       });
     });
 
@@ -588,7 +629,7 @@ export class ExpenseService {
       };
       payerMap.set(expense.paidById, {
         name: existing.name,
-        totalPaid: existing.totalPaid + expense.amount,
+        totalPaid: existing.totalPaid + Number(expense.amount),
       });
     });
 
