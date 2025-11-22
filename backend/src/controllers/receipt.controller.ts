@@ -4,6 +4,7 @@ import { expenseService } from '../services/expense.service';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { addOCRJob } from '../queues/ocr.queue';
+import { features } from '../config/features';
 
 export class ReceiptController {
   /**
@@ -34,22 +35,32 @@ export class ReceiptController {
 
       logger.info(`Receipt uploaded: ${receipt.id} by ${req.user.email}`);
 
-      // Trigger OCR processing job
-      try {
-        await addOCRJob({
-          receiptId: receipt.id,
-          filePath: receipt.fileUrl,
-        });
-        logger.info(`OCR job queued for receipt: ${receipt.id}`);
-      } catch (queueError) {
-        logger.error(`Error queueing OCR job for receipt ${receipt.id}:`, queueError);
-        // Don't fail the upload if queue fails - OCR can be retried later
+      // Trigger OCR processing job (if enabled)
+      let ocrMessage = 'Receipt uploaded successfully.';
+      if (features.ocr.enabled && features.backgroundJobs.enabled) {
+        try {
+          await addOCRJob({
+            receiptId: receipt.id,
+            filePath: receipt.fileUrl,
+          });
+          logger.info(`OCR job queued for receipt: ${receipt.id}`);
+          ocrMessage = 'Receipt uploaded successfully. OCR processing will begin shortly.';
+        } catch (queueError) {
+          logger.error(`Error queueing OCR job for receipt ${receipt.id}:`, queueError);
+          // Don't fail the upload if queue fails - OCR can be retried later
+        }
+      } else {
+        if (!features.ocr.enabled) {
+          logger.info(`OCR disabled - skipping for receipt: ${receipt.id}`);
+        } else if (!features.backgroundJobs.enabled) {
+          logger.info(`Background jobs disabled - OCR not available for receipt: ${receipt.id}`);
+        }
       }
 
       res.status(201).json({
         success: true,
         data: { receipt },
-        message: 'Receipt uploaded successfully. OCR processing will begin shortly.',
+        message: ocrMessage,
       });
     } catch (error) {
       next(error);
