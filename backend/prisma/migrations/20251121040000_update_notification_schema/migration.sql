@@ -13,9 +13,9 @@ ALTER TABLE "Notification" DROP COLUMN IF EXISTS "deliveredAt" CASCADE;
 ALTER TABLE "Notification" DROP COLUMN IF EXISTS "clicked" CASCADE;
 ALTER TABLE "Notification" DROP COLUMN IF EXISTS "clickedAt" CASCADE;
 
--- Update expiresAt to be nullable
-ALTER TABLE "Notification" ALTER COLUMN "expiresAt" DROP NOT NULL;
+-- Update expiresAt to be nullable (drop default first, then NOT NULL)
 ALTER TABLE "Notification" ALTER COLUMN "expiresAt" DROP DEFAULT;
+ALTER TABLE "Notification" ALTER COLUMN "expiresAt" DROP NOT NULL;
 
 -- Create indexes for new columns
 CREATE INDEX IF NOT EXISTS "Notification_type_idx" ON "Notification"("type");
