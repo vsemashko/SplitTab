@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { receiptService } from '../services/receipt.service';
+import { expenseService } from '../services/expense.service';
 import { ApiError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { addOCRJob } from '../queues/ocr.queue';
@@ -70,9 +71,11 @@ export class ReceiptController {
       const receipt = await receiptService.getReceiptById(id);
 
       // Check if user has access (uploader or expense participant)
-      if (receipt.uploadedById !== req.user.userId) {
-        // TODO: Check if user is participant in the expense
-        // For now, only uploader can view
+      const isUploader = receipt.uploadedById === req.user.userId;
+      const isParticipant =
+        receipt.expense?.participants?.some((p) => p.userId === req.user!.userId) ?? false;
+
+      if (!isUploader && !isParticipant) {
         throw new ApiError(403, 'You do not have permission to view this receipt');
       }
 
@@ -130,7 +133,14 @@ export class ReceiptController {
 
       const { expenseId } = req.params;
 
-      // TODO: Verify user is participant in expense
+      // Verify user is participant in expense
+      const expense = await expenseService.getExpenseById(expenseId);
+      const isParticipant = expense.participants.some((p) => p.userId === req.user!.userId);
+
+      if (!isParticipant) {
+        throw new ApiError(403, 'You do not have permission to view receipts for this expense');
+      }
+
       const receipts = await receiptService.getExpenseReceipts(expenseId);
 
       res.json({

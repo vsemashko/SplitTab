@@ -18,7 +18,12 @@ router.get('/', authenticate, settlementController.getUserSettlements.bind(settl
  * @desc    Create a new settlement
  * @access  Private
  */
-router.post('/', authenticate, validate(createSettlementSchema), settlementController.createSettlement.bind(settlementController));
+router.post(
+  '/',
+  authenticate,
+  validate(createSettlementSchema),
+  settlementController.createSettlement.bind(settlementController)
+);
 
 /**
  * @route   GET /api/v1/settlements/:id
@@ -32,27 +37,44 @@ router.get('/:id', authenticate, settlementController.getSettlement.bind(settlem
  * @desc    Update settlement
  * @access  Private (Involved parties or Admin)
  */
-router.put('/:id', authenticate, validate(updateSettlementSchema), settlementController.updateSettlement.bind(settlementController));
+router.put(
+  '/:id',
+  authenticate,
+  validate(updateSettlementSchema),
+  settlementController.updateSettlement.bind(settlementController)
+);
 
 /**
  * @route   POST /api/v1/settlements/:id/confirm
  * @desc    Confirm settlement (mark as paid)
  * @access  Private (Payee only)
  */
-router.post('/:id/confirm', authenticate, settlementController.confirmSettlement.bind(settlementController));
+router.post(
+  '/:id/confirm',
+  authenticate,
+  settlementController.confirmSettlement.bind(settlementController)
+);
 
 /**
  * @route   POST /api/v1/settlements/:id/cancel
  * @desc    Cancel settlement
  * @access  Private (Involved parties)
  */
-router.post('/:id/cancel', authenticate, settlementController.cancelSettlement.bind(settlementController));
+router.post(
+  '/:id/cancel',
+  authenticate,
+  settlementController.cancelSettlement.bind(settlementController)
+);
 
 /**
  * @route   DELETE /api/v1/settlements/:id
  * @desc    Delete settlement
  * @access  Private (Involved parties or Admin)
  */
-router.delete('/:id', authenticate, settlementController.deleteSettlement.bind(settlementController));
+router.delete(
+  '/:id',
+  authenticate,
+  settlementController.deleteSettlement.bind(settlementController)
+);
 
 export default router;

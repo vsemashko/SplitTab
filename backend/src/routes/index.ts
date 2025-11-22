@@ -25,15 +25,35 @@ router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
 
 // Nested group routes for expenses
-router.get('/groups/:groupId/expenses', authenticate, expenseController.getGroupExpenses.bind(expenseController));
-router.get('/groups/:groupId/expenses/statistics', authenticate, expenseController.getGroupExpenseStatistics.bind(expenseController));
+router.get(
+  '/groups/:groupId/expenses',
+  authenticate,
+  expenseController.getGroupExpenses.bind(expenseController)
+);
+router.get(
+  '/groups/:groupId/expenses/statistics',
+  authenticate,
+  expenseController.getGroupExpenseStatistics.bind(expenseController)
+);
 
 // Nested group routes for settlements
-router.get('/groups/:groupId/settlements', authenticate, settlementController.getGroupSettlements.bind(settlementController));
-router.get('/groups/:groupId/settlements/suggestions', authenticate, settlementController.calculateSuggestedSettlements.bind(settlementController));
+router.get(
+  '/groups/:groupId/settlements',
+  authenticate,
+  settlementController.getGroupSettlements.bind(settlementController)
+);
+router.get(
+  '/groups/:groupId/settlements/suggestions',
+  authenticate,
+  settlementController.calculateSuggestedSettlements.bind(settlementController)
+);
 
 // Nested route for expense receipts
-router.get('/expenses/:expenseId/receipts', authenticate, receiptController.getExpenseReceipts.bind(receiptController));
+router.get(
+  '/expenses/:expenseId/receipts',
+  authenticate,
+  receiptController.getExpenseReceipts.bind(receiptController)
+);
 
 // Health check
 router.get('/health', (_req, res) => {

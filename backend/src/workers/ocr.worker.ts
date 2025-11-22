@@ -18,7 +18,11 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
 
   try {
     // Update receipt status to processing
-    await receiptService.updateOCRResults(receiptId, { confidence: 0, rawData: null }, 'processing');
+    await receiptService.updateOCRResults(
+      receiptId,
+      { confidence: 0, rawData: null },
+      'processing'
+    );
 
     // Process receipt with OCR service
     const ocrResult = await ocrService.processReceipt(filePath);
@@ -35,9 +39,7 @@ async function processOCRJob(job: Job<OCRJobData>): Promise<void> {
     // Update receipt with OCR results
     const receipt = await receiptService.updateOCRResults(receiptId, ocrResult, 'completed');
 
-    logger.info(
-      `OCR completed for receipt ${receiptId} with confidence ${ocrResult.confidence}`
-    );
+    logger.info(`OCR completed for receipt ${receiptId} with confidence ${ocrResult.confidence}`);
 
     // Log extracted data summary
     if (ocrResult.merchantName || ocrResult.totalAmount) {

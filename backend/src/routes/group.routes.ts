@@ -18,7 +18,12 @@ router.get('/', authenticate, groupController.getUserGroups.bind(groupController
  * @desc    Create a new group
  * @access  Private
  */
-router.post('/', authenticate, validate(createGroupSchema), groupController.createGroup.bind(groupController));
+router.post(
+  '/',
+  authenticate,
+  validate(createGroupSchema),
+  groupController.createGroup.bind(groupController)
+);
 
 /**
  * @route   GET /api/v1/groups/:id
@@ -32,7 +37,12 @@ router.get('/:id', authenticate, groupController.getGroup.bind(groupController))
  * @desc    Update group
  * @access  Private (Admin only)
  */
-router.put('/:id', authenticate, validate(updateGroupSchema), groupController.updateGroup.bind(groupController));
+router.put(
+  '/:id',
+  authenticate,
+  validate(updateGroupSchema),
+  groupController.updateGroup.bind(groupController)
+);
 
 /**
  * @route   DELETE /api/v1/groups/:id
@@ -53,20 +63,32 @@ router.post('/:id/members', authenticate, groupController.addMember.bind(groupCo
  * @desc    Remove member from group
  * @access  Private (Admin or self)
  */
-router.delete('/:id/members/:userId', authenticate, groupController.removeMember.bind(groupController));
+router.delete(
+  '/:id/members/:userId',
+  authenticate,
+  groupController.removeMember.bind(groupController)
+);
 
 /**
  * @route   PATCH /api/v1/groups/:id/members/:userId/role
  * @desc    Update member role
  * @access  Private (Admin only)
  */
-router.patch('/:id/members/:userId/role', authenticate, groupController.updateMemberRole.bind(groupController));
+router.patch(
+  '/:id/members/:userId/role',
+  authenticate,
+  groupController.updateMemberRole.bind(groupController)
+);
 
 /**
  * @route   GET /api/v1/groups/:id/statistics
  * @desc    Get group statistics
  * @access  Private (Members only)
  */
-router.get('/:id/statistics', authenticate, groupController.getGroupStatistics.bind(groupController));
+router.get(
+  '/:id/statistics',
+  authenticate,
+  groupController.getGroupStatistics.bind(groupController)
+);
 
 export default router;

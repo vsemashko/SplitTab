@@ -197,12 +197,15 @@ export function addBreadcrumb(
 export function startTransaction(name: string, op: string): any {
   if (!config.sentry.dsn) return undefined;
 
-  return Sentry.startSpan({
-    name,
-    op,
-  }, (span) => {
-    return span;
-  });
+  return Sentry.startSpan(
+    {
+      name,
+      op,
+    },
+    (span) => {
+      return span;
+    }
+  );
 }
 
 /**

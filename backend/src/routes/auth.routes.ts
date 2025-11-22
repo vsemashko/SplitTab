@@ -2,11 +2,7 @@ import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import {
-  createUserSchema,
-  loginSchema,
-  updatePasswordSchema,
-} from '../types/validation';
+import { createUserSchema, loginSchema, updatePasswordSchema } from '../types/validation';
 
 const router = Router();
 
@@ -76,7 +72,11 @@ router.post(
  * @desc    Send email verification
  * @access  Private
  */
-router.post('/email/verify-request', authenticate, authController.sendEmailVerification.bind(authController));
+router.post(
+  '/email/verify-request',
+  authenticate,
+  authController.sendEmailVerification.bind(authController)
+);
 
 /**
  * @route   POST /api/v1/auth/email/verify
@@ -104,6 +104,10 @@ router.delete('/sessions', authenticate, authController.revokeAllSessions.bind(a
  * @desc    Revoke specific session
  * @access  Private
  */
-router.delete('/sessions/:sessionId', authenticate, authController.revokeSession.bind(authController));
+router.delete(
+  '/sessions/:sessionId',
+  authenticate,
+  authController.revokeSession.bind(authController)
+);
 
 export default router;

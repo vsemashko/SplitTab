@@ -159,7 +159,10 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if user exists
-      throw new ApiError(404, 'If a user with this email exists, a password reset link has been sent');
+      throw new ApiError(
+        404,
+        'If a user with this email exists, a password reset link has been sent'
+      );
     }
 
     if (!user.passwordHash) {

@@ -16,20 +16,32 @@ router.get('/overview', authenticate, analyticsController.getOverview.bind(analy
  * @desc    Get detailed receipt analytics
  * @access  Private
  */
-router.get('/receipts', authenticate, analyticsController.getReceiptAnalytics.bind(analyticsController));
+router.get(
+  '/receipts',
+  authenticate,
+  analyticsController.getReceiptAnalytics.bind(analyticsController)
+);
 
 /**
  * @route   GET /api/v1/analytics/expenses
  * @desc    Get detailed expense analytics
  * @access  Private
  */
-router.get('/expenses', authenticate, analyticsController.getExpenseAnalytics.bind(analyticsController));
+router.get(
+  '/expenses',
+  authenticate,
+  analyticsController.getExpenseAnalytics.bind(analyticsController)
+);
 
 /**
  * @route   GET /api/v1/analytics/trends
  * @desc    Get spending trends over time
  * @access  Private
  */
-router.get('/trends', authenticate, analyticsController.getSpendingTrends.bind(analyticsController));
+router.get(
+  '/trends',
+  authenticate,
+  analyticsController.getSpendingTrends.bind(analyticsController)
+);
 
 export default router;

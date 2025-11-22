@@ -9,14 +9,22 @@ const router = Router();
  * @desc    Get unread notification count
  * @access  Private
  */
-router.get('/unread/count', authenticate, notificationController.getUnreadCount.bind(notificationController));
+router.get(
+  '/unread/count',
+  authenticate,
+  notificationController.getUnreadCount.bind(notificationController)
+);
 
 /**
  * @route   PATCH /api/v1/notifications/mark-all-read
  * @desc    Mark all notifications as read
  * @access  Private
  */
-router.patch('/mark-all-read', authenticate, notificationController.markAllAsRead.bind(notificationController));
+router.patch(
+  '/mark-all-read',
+  authenticate,
+  notificationController.markAllAsRead.bind(notificationController)
+);
 
 /**
  * @route   GET /api/v1/notifications
@@ -30,27 +38,43 @@ router.get('/', authenticate, notificationController.getNotifications.bind(notif
  * @desc    Delete all notifications
  * @access  Private
  */
-router.delete('/', authenticate, notificationController.deleteAllNotifications.bind(notificationController));
+router.delete(
+  '/',
+  authenticate,
+  notificationController.deleteAllNotifications.bind(notificationController)
+);
 
 /**
  * @route   GET /api/v1/notifications/:id
  * @desc    Get single notification
  * @access  Private
  */
-router.get('/:id', authenticate, notificationController.getNotification.bind(notificationController));
+router.get(
+  '/:id',
+  authenticate,
+  notificationController.getNotification.bind(notificationController)
+);
 
 /**
  * @route   PATCH /api/v1/notifications/:id/read
  * @desc    Mark notification as read
  * @access  Private
  */
-router.patch('/:id/read', authenticate, notificationController.markAsRead.bind(notificationController));
+router.patch(
+  '/:id/read',
+  authenticate,
+  notificationController.markAsRead.bind(notificationController)
+);
 
 /**
  * @route   DELETE /api/v1/notifications/:id
  * @desc    Delete notification
  * @access  Private
  */
-router.delete('/:id', authenticate, notificationController.deleteNotification.bind(notificationController));
+router.delete(
+  '/:id',
+  authenticate,
+  notificationController.deleteNotification.bind(notificationController)
+);
 
 export default router;
