@@ -1,9 +1,43 @@
-import { PrismaClient, Receipt } from '@prisma/client';
+import { PrismaClient, Receipt, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { ApiError, NotFoundError } from '../middleware/errorHandler';
 import { deleteFile } from '../utils/fileUpload';
 
 const prisma = new PrismaClient();
+
+// Type for receipt with relations
+export type ReceiptWithRelations = Prisma.ReceiptGetPayload<{
+  include: {
+    uploadedBy: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+      };
+    };
+    expense: {
+      include: {
+        paidBy: {
+          select: {
+            id: true;
+            name: true;
+          };
+        };
+        group: {
+          select: {
+            id: true;
+            name: true;
+          };
+        };
+        participants: {
+          select: {
+            userId: true;
+          };
+        };
+      };
+    };
+  };
+}>;
 
 export interface CreateReceiptData {
   fileName: string;
@@ -74,7 +108,7 @@ export class ReceiptService {
   /**
    * Get receipt by ID
    */
-  async getReceiptById(id: string): Promise<Receipt> {
+  async getReceiptById(id: string): Promise<ReceiptWithRelations> {
     const receipt = await prisma.receipt.findUnique({
       where: { id, deletedAt: null },
       include: {
@@ -97,6 +131,11 @@ export class ReceiptService {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+            participants: {
+              select: {
+                userId: true,
               },
             },
           },
@@ -220,7 +259,12 @@ export class ReceiptService {
   /**
    * Update OCR status and results
    */
-  async updateOCRResults(id: string, result: OCRResult, status: string, error?: string): Promise<Receipt> {
+  async updateOCRResults(
+    id: string,
+    result: OCRResult,
+    status: string,
+    error?: string
+  ): Promise<Receipt> {
     const receipt = await prisma.receipt.findUnique({
       where: { id },
     });
@@ -584,7 +628,10 @@ export class ReceiptService {
   /**
    * Batch retry OCR for multiple receipts
    */
-  async batchRetryOCR(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+  async batchRetryOCR(
+    receiptIds: string[],
+    userId: string
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
@@ -627,7 +674,10 @@ export class ReceiptService {
   /**
    * Batch delete receipts
    */
-  async batchDelete(receiptIds: string[], userId: string): Promise<{ success: number; failed: number }> {
+  async batchDelete(
+    receiptIds: string[],
+    userId: string
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
@@ -741,9 +791,7 @@ export class ReceiptService {
     // Combine headers and rows
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-      ),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ].join('\n');
 
     return csvContent;

@@ -105,43 +105,37 @@ export class AnalyticsController {
       }
 
       // Get receipt statistics
-      const [
-        totalReceipts,
-        byStatus,
-        byMerchant,
-        averageConfidence,
-        totalAmount,
-        byCurrency,
-      ] = await Promise.all([
-        prisma.receipt.count({ where }),
-        prisma.receipt.groupBy({
-          by: ['ocrStatus'],
-          where,
-          _count: true,
-        }),
-        prisma.receipt.groupBy({
-          by: ['merchantName'],
-          where: { ...where, merchantName: { not: null } },
-          _count: true,
-          _sum: { totalAmount: true },
-          orderBy: { _count: { merchantName: 'desc' } },
-          take: 10,
-        }),
-        prisma.receipt.aggregate({
-          where: { ...where, ocrStatus: 'completed' },
-          _avg: { ocrConfidence: true },
-        }),
-        prisma.receipt.aggregate({
-          where: { ...where, totalAmount: { not: null } },
-          _sum: { totalAmount: true },
-        }),
-        prisma.receipt.groupBy({
-          by: ['currency'],
-          where: { ...where, currency: { not: null } },
-          _count: true,
-          _sum: { totalAmount: true },
-        }),
-      ]);
+      const [totalReceipts, byStatus, byMerchant, averageConfidence, totalAmount, byCurrency] =
+        await Promise.all([
+          prisma.receipt.count({ where }),
+          prisma.receipt.groupBy({
+            by: ['ocrStatus'],
+            where,
+            _count: true,
+          }),
+          prisma.receipt.groupBy({
+            by: ['merchantName'],
+            where: { ...where, merchantName: { not: null } },
+            _count: true,
+            _sum: { totalAmount: true },
+            orderBy: { _count: { merchantName: 'desc' } },
+            take: 10,
+          }),
+          prisma.receipt.aggregate({
+            where: { ...where, ocrStatus: 'completed' },
+            _avg: { ocrConfidence: true },
+          }),
+          prisma.receipt.aggregate({
+            where: { ...where, totalAmount: { not: null } },
+            _sum: { totalAmount: true },
+          }),
+          prisma.receipt.groupBy({
+            by: ['currency'],
+            where: { ...where, currency: { not: null } },
+            _count: true,
+            _sum: { totalAmount: true },
+          }),
+        ]);
 
       res.json({
         success: true,
@@ -192,8 +186,8 @@ export class AnalyticsController {
       }
 
       // Get expense statistics
-      const [totalExpenses, byCategory, byCurrency, totalAmount, averageAmount] =
-        await Promise.all([
+      const [totalExpenses, byCategory, byCurrency, totalAmount, averageAmount] = await Promise.all(
+        [
           prisma.expense.count({ where }),
           prisma.expense.groupBy({
             by: ['category'],
@@ -216,7 +210,8 @@ export class AnalyticsController {
             where,
             _avg: { amount: true },
           }),
-        ]);
+        ]
+      );
 
       res.json({
         success: true,

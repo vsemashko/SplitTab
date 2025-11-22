@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:3000
+      - NEXT_PUBLIC_API_VERSION=v1
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - splittab-network
+    restart: unless-stopped
+
+  backend:
+    image: splittab-backend:latest
+    ports:
+      - '3000:3000'
+    networks:
+      - splittab-network
+
+networks:
+  splittab-network:
+    driver: bridge

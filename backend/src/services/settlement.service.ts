@@ -266,7 +266,11 @@ export class SettlementService {
   /**
    * Update settlement
    */
-  async updateSettlement(id: string, data: UpdateSettlementData, userId: string): Promise<Settlement> {
+  async updateSettlement(
+    id: string,
+    data: UpdateSettlementData,
+    userId: string
+  ): Promise<Settlement> {
     const settlement = await prisma.settlement.findUnique({
       where: { id, deletedAt: null },
       include: {

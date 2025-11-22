@@ -18,21 +18,34 @@ router.get('/', authenticate, expenseController.getUserExpenses.bind(expenseCont
  * @desc    Create a new expense
  * @access  Private
  */
-router.post('/', authenticate, validate(createExpenseSchema), expenseController.createExpense.bind(expenseController));
+router.post(
+  '/',
+  authenticate,
+  validate(createExpenseSchema),
+  expenseController.createExpense.bind(expenseController)
+);
 
 /**
  * @route   POST /api/v1/expenses/calculate-split/equal
  * @desc    Calculate equal split for expense
- * @access  Public (utility endpoint)
+ * @access  Private
  */
-router.post('/calculate-split/equal', expenseController.calculateEqualSplit.bind(expenseController));
+router.post(
+  '/calculate-split/equal',
+  authenticate,
+  expenseController.calculateEqualSplit.bind(expenseController)
+);
 
 /**
  * @route   POST /api/v1/expenses/calculate-split/percentage
  * @desc    Calculate percentage split for expense
- * @access  Public (utility endpoint)
+ * @access  Private
  */
-router.post('/calculate-split/percentage', expenseController.calculatePercentageSplit.bind(expenseController));
+router.post(
+  '/calculate-split/percentage',
+  authenticate,
+  expenseController.calculatePercentageSplit.bind(expenseController)
+);
 
 /**
  * @route   GET /api/v1/expenses/:id
@@ -46,7 +59,12 @@ router.get('/:id', authenticate, expenseController.getExpense.bind(expenseContro
  * @desc    Update expense
  * @access  Private (Creator or Admin)
  */
-router.put('/:id', authenticate, validate(updateExpenseSchema), expenseController.updateExpense.bind(expenseController));
+router.put(
+  '/:id',
+  authenticate,
+  validate(updateExpenseSchema),
+  expenseController.updateExpense.bind(expenseController)
+);
 
 /**
  * @route   DELETE /api/v1/expenses/:id

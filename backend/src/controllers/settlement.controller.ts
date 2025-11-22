@@ -42,7 +42,8 @@ export class SettlementController {
       const settlement = await settlementService.getSettlementById(id);
 
       // Verify user is involved
-      const isInvolved = settlement.payerId === req.user.userId || settlement.payeeId === req.user.userId;
+      const isInvolved =
+        settlement.payerId === req.user.userId || settlement.payeeId === req.user.userId;
       if (!isInvolved) {
         throw new ApiError(403, 'You must be involved in this settlement');
       }
@@ -237,7 +238,10 @@ export class SettlementController {
 
       const { groupId } = req.params;
 
-      const suggestions = await settlementService.calculateSuggestedSettlements(groupId, req.user.userId);
+      const suggestions = await settlementService.calculateSuggestedSettlements(
+        groupId,
+        req.user.userId
+      );
 
       res.json({
         success: true,

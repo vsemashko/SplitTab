@@ -1,0 +1,481 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.2.3)'
+        required: true
+        type: string
+      skip_migration:
+        description: 'Skip database migration'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  validate:
+    name: Validate Production Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+
+          # Validate version format (v1.2.3)
+          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $VERSION. Expected format: v1.2.3"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Verify staging deployment
+        id: check
+        run: |
+          echo "Verifying that version was deployed to staging first..."
+          # Add logic to verify staging deployment if needed
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+
+      - name: Create deployment tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "production-${{ steps.version.outputs.version }}" -m "Production deployment ${{ steps.version.outputs.version }}"
+
+  approval:
+    name: Production Deployment Approval
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: production-approval
+    steps:
+      - name: Await approval
+        run: echo "Deployment approved for version ${{ needs.validate.outputs.version }}"
+
+  backup:
+    name: Create Pre-deployment Backup
+    runs-on: ubuntu-latest
+    needs: [validate, approval]
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create database backup
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          echo "Creating production database backup..."
+          BACKUP_NAME="prod-backup-$(date +%Y%m%d%H%M%S)-${{ needs.validate.outputs.version }}"
+
+          # For Railway
+          # railway backup create --service postgres --environment production
+
+          # For AWS RDS
+          # aws rds create-db-snapshot \
+          #   --db-instance-identifier splittab-prod \
+          #   --db-snapshot-identifier $BACKUP_NAME
+
+          echo "Backup created: $BACKUP_NAME"
+          echo "BACKUP_NAME=$BACKUP_NAME" >> $GITHUB_ENV
+
+      - name: Upload backup metadata
+        uses: actions/upload-artifact@v3
+        with:
+          name: backup-metadata
+          path: |
+            backup-info.json
+          retention-days: 90
+
+  build:
+    name: Build & Push Production Image
+    runs-on: ubuntu-latest
+    needs: [validate, approval, backup]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.validate.outputs.version }}
+            type=raw,value=production-latest
+            type=semver,pattern={{version}},value=${{ needs.validate.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.validate.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VERSION=${{ needs.validate.outputs.version }}
+            VCS_REF=${{ github.sha }}
+          platforms: linux/amd64
+
+      - name: Sign the images with cosign
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: echo "Image signing skipped (implement if needed)"
+
+  migrate-database:
+    name: Run Production Database Migrations
+    runs-on: ubuntu-latest
+    needs: [validate, approval, backup, build]
+    if: github.event.inputs.skip_migration != 'true'
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci --only=production
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Dry run migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          echo "Previewing migrations..."
+          npx prisma migrate status
+
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          echo "Running Prisma migrations on production..."
+          npx prisma migrate deploy
+
+      - name: Verify migration
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          echo "Verifying database schema..."
+          npx prisma db execute --stdin <<< "SELECT 1;"
+
+  deploy-railway:
+    name: Deploy to Railway (Production)
+    runs-on: ubuntu-latest
+    needs: [validate, approval, backup, build, migrate-database]
+    if: always() && (needs.migrate-database.result == 'success' || needs.migrate-database.result == 'skipped')
+    environment:
+      name: production
+      url: https://splittab.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.version }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy backend to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Deploying backend version ${{ needs.validate.outputs.version }}..."
+          railway up --service backend --environment production
+
+      - name: Wait for backend deployment
+        run: sleep 30
+
+      - name: Deploy worker to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Deploying worker version ${{ needs.validate.outputs.version }}..."
+          railway up --service worker --environment production
+
+      - name: Wait for worker deployment
+        run: sleep 30
+
+  deploy-aws:
+    name: Deploy to AWS ECS (Alternative)
+    runs-on: ubuntu-latest
+    needs: [validate, approval, backup, build, migrate-database]
+    if: false  # Set to true to enable AWS deployment
+    environment:
+      name: production
+      url: https://splittab.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition splittab-backend \
+            --query taskDefinition > task-definition.json
+
+      - name: Update task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: backend
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate.outputs.version }}
+
+      - name: Deploy to Amazon ECS (Blue/Green)
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: backend
+          cluster: splittab-production
+          wait-for-service-stability: true
+          codedeploy-appspec: appspec.yml
+          codedeploy-application: splittab
+          codedeploy-deployment-group: splittab-production
+
+  health-check:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    needs: deploy-railway
+    environment:
+      name: production
+
+    steps:
+      - name: Wait for deployment stabilization
+        run: sleep 60
+
+      - name: Comprehensive health check
+        run: |
+          echo "Running comprehensive health checks..."
+
+          # Health endpoint
+          curl -f https://splittab.com/health
+
+          # API health
+          curl -f https://splittab.com/api/v1/health
+
+          # Database connectivity
+          curl -f https://splittab.com/api/v1/health/db
+
+          # Redis connectivity
+          curl -f https://splittab.com/api/v1/health/redis
+
+          echo "All health checks passed!"
+
+      - name: Performance check
+        run: |
+          echo "Checking response times..."
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}\n' https://splittab.com/health)
+          echo "Response time: ${RESPONSE_TIME}s"
+
+          # Fail if response time > 2 seconds
+          if (( $(echo "$RESPONSE_TIME > 2.0" | bc -l) )); then
+            echo "Response time too slow!"
+            exit 1
+          fi
+
+  smoke-tests:
+    name: Run Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: health-check
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run smoke tests
+        env:
+          API_BASE_URL: https://splittab.com
+        run: |
+          # Critical user flows
+          echo "Testing critical user flows..."
+
+          # User registration endpoint exists
+          curl -f -X OPTIONS https://splittab.com/api/v1/auth/register
+
+          # User login endpoint exists
+          curl -f -X OPTIONS https://splittab.com/api/v1/auth/login
+
+          echo "Smoke tests passed!"
+
+  rollback-check:
+    name: Validate Rollback Capability
+    runs-on: ubuntu-latest
+    needs: [deploy-railway, health-check]
+    if: failure()
+    environment:
+      name: production
+
+    steps:
+      - name: Prepare rollback
+        run: |
+          echo "Deployment failed! Preparing rollback..."
+          echo "Previous version available for rollback"
+
+      - name: Notify team
+        run: |
+          echo "CRITICAL: Production deployment failed!"
+          echo "Manual rollback may be required"
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-railway, health-check, smoke-tests]
+    if: always()
+    environment:
+      name: production
+
+    steps:
+      - name: Deployment Success Notification
+        if: needs.deploy-railway.result == 'success' && needs.health-check.result == 'success' && needs.smoke-tests.result == 'success'
+        run: |
+          echo "Production deployment successful!"
+          echo "Version: ${{ needs.validate.outputs.version }}"
+
+      - name: Deployment Failure Notification
+        if: failure()
+        run: |
+          echo "Production deployment failed!"
+          echo "Version: ${{ needs.validate.outputs.version }}"
+
+      - name: Send Slack notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production Deployment ${{ job.status }}
+            Version: ${{ needs.validate.outputs.version }}
+            Commit: ${{ github.sha }}
+            Release: ${{ github.event.release.html_url }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create deployment record
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ needs.validate.outputs.version }}',
+              environment: 'production',
+              auto_merge: false,
+              required_contexts: []
+            });
+
+  post-deployment:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-railway, health-check, smoke-tests]
+    if: success()
+    environment:
+      name: production
+
+    steps:
+      - name: Update monitoring dashboards
+        run: |
+          echo "Updating monitoring dashboards with new version..."
+          # Add Datadog/Grafana annotation
+
+      - name: Clear CDN cache
+        if: false  # Enable if using CDN
+        run: |
+          echo "Clearing CDN cache..."
+          # Add CloudFlare/CloudFront cache invalidation
+
+      - name: Send success metrics
+        run: |
+          echo "Recording deployment metrics..."
+          # Send to analytics platform

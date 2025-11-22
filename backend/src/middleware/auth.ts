@@ -97,7 +97,11 @@ export const optionalAuthenticate = async (req: Request, _res: Response, next: N
  * Require email verification middleware
  * Must be used after authenticate middleware
  */
-export const requireEmailVerification = async (req: Request, _res: Response, next: NextFunction) => {
+export const requireEmailVerification = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       throw new ApiError(401, 'Authentication required');
