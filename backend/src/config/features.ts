@@ -185,7 +185,9 @@ export const logFeatureFlags = (logFn: (message: string) => void = console.log):
   // eslint-disable-next-line no-console
   logFn(`  Apple Sign-In: ${features.oauth.apple.enabled ? '✅ Enabled' : '❌ Disabled'}`);
   // eslint-disable-next-line no-console
-  logFn(`  Sentry Monitoring: ${features.monitoring.sentry.enabled ? '✅ Enabled' : '❌ Disabled'}`);
+  logFn(
+    `  Sentry Monitoring: ${features.monitoring.sentry.enabled ? '✅ Enabled' : '❌ Disabled'}`
+  );
   // eslint-disable-next-line no-console
   logFn('');
 };
