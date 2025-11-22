@@ -285,10 +285,14 @@ jobs:
 
       - name: Validate Prisma schema
         run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/validation_db
 
       - name: Check for migration issues
         run: npx prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --script
         continue-on-error: true
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/validation_db
 
   ci-success:
     name: CI Success
