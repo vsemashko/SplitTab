@@ -130,28 +130,6 @@ CREATE TABLE "Session" (
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Notification" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "message" TEXT NOT NULL,
-    "expenseId" TEXT,
-    "settlementId" TEXT,
-    "groupId" TEXT,
-    "channels" TEXT[],
-    "deliveredAt" TIMESTAMP(3),
-    "read" BOOLEAN NOT NULL DEFAULT false,
-    "readAt" TIMESTAMP(3),
-    "clicked" BOOLEAN NOT NULL DEFAULT false,
-    "clickedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3) NOT NULL DEFAULT now() + interval '30 days',
-
-    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -251,21 +229,6 @@ CREATE INDEX "Session_expiresAt_idx" ON "Session"("expiresAt");
 -- CreateIndex
 CREATE INDEX "Session_revoked_idx" ON "Session"("revoked");
 
--- CreateIndex
-CREATE INDEX "Notification_userId_idx" ON "Notification"("userId");
-
--- CreateIndex
-CREATE INDEX "Notification_userId_read_idx" ON "Notification"("userId", "read");
-
--- CreateIndex
-CREATE INDEX "Notification_createdAt_idx" ON "Notification"("createdAt");
-
--- CreateIndex
-CREATE INDEX "Notification_type_idx" ON "Notification"("type");
-
--- CreateIndex
-CREATE INDEX "Notification_expiresAt_idx" ON "Notification"("expiresAt");
-
 -- AddForeignKey
 ALTER TABLE "Group" ADD CONSTRAINT "Group_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -298,6 +261,3 @@ ALTER TABLE "Settlement" ADD CONSTRAINT "Settlement_payeeId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
