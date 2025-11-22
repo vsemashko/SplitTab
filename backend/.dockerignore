@@ -1,0 +1,72 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Testing
+coverage
+*.test.ts
+*.spec.ts
+tests/
+jest.config.js
+jest-setup-env.js
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Logs
+logs
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Uploads (use volumes instead)
+uploads/*
+!uploads/.gitkeep
+
+# Misc
+.editorconfig
+.prettierrc
+.eslintrc
+.eslintignore
+tsconfig.json

@@ -1,0 +1,311 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  validate:
+    name: Validate Pre-deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="staging-$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M%S)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Check if deployment needed
+        id: check
+        run: |
+          echo "Checking for changes that require deployment..."
+          if git diff --quiet HEAD~1 HEAD -- backend/ .github/workflows/deploy-staging.yml; then
+            echo "No changes detected in backend"
+            echo "deploy_needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected, deployment needed"
+            echo "deploy_needed=true" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: validate
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.validate.outputs.version }}
+            type=raw,value=staging-latest
+            type=sha,prefix=staging-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+
+  migrate-database:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    environment:
+      name: staging
+      url: https://staging.splittab.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci --only=production
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Create database backup
+        run: |
+          echo "Creating database backup before migration..."
+          # Add your database backup command here
+          # Example for Railway:
+          # railway run --service postgres -- pg_dump > backup-$(date +%Y%m%d%H%M%S).sql
+
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          echo "Running Prisma migrations..."
+          npx prisma migrate deploy
+
+      - name: Verify migration
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          echo "Verifying database schema..."
+          npx prisma db execute --stdin <<< "SELECT 1;"
+
+  deploy-railway:
+    name: Deploy to Railway (Staging)
+    runs-on: ubuntu-latest
+    needs: [validate, build, migrate-database]
+    if: github.event.repository.fork == false
+    environment:
+      name: staging
+      url: https://staging.splittab.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service backend --environment staging
+          railway up --service worker --environment staging
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          echo "Checking application health..."
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -s https://staging.splittab.com/health > /dev/null; then
+              echo "Health check passed!"
+              exit 0
+            fi
+
+            echo "Health check failed, retrying... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 10
+          done
+
+          echo "Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+  deploy-aws:
+    name: Deploy to AWS ECS (Alternative)
+    runs-on: ubuntu-latest
+    needs: [validate, build, migrate-database]
+    if: false  # Set to true to enable AWS deployment
+    environment:
+      name: staging
+      url: https://staging.splittab.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster splittab-staging \
+            --service backend \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }}
+
+          aws ecs update-service \
+            --cluster splittab-staging \
+            --service worker \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }}
+
+      - name: Wait for ECS service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster splittab-staging \
+            --services backend worker \
+            --region ${{ secrets.AWS_REGION }}
+
+  smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy-railway
+    environment:
+      name: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run smoke tests
+        env:
+          API_BASE_URL: https://staging.splittab.com
+          STAGING_API_KEY: ${{ secrets.STAGING_API_KEY }}
+        run: |
+          # Basic API health checks
+          echo "Testing health endpoint..."
+          curl -f https://staging.splittab.com/health
+
+          echo "Testing API version endpoint..."
+          curl -f https://staging.splittab.com/api/v1/health
+
+          # Add more smoke tests as needed
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-railway, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Deployment Success Notification
+        if: needs.deploy-railway.result == 'success' && needs.smoke-tests.result == 'success'
+        run: |
+          echo "Staging deployment successful!"
+          # Add Slack/Discord/Email notification here
+
+      - name: Deployment Failure Notification
+        if: needs.deploy-railway.result == 'failure' || needs.smoke-tests.result == 'failure'
+        run: |
+          echo "Staging deployment failed!"
+          # Add Slack/Discord/Email notification here
+
+      - name: Send Slack notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Staging Deployment ${{ job.status }}
+            Version: ${{ needs.validate.outputs.version }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
